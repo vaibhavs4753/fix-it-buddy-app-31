@@ -1,0 +1,74 @@
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+const Login = () => {
+  const { setUserType } = useAuth();
+  const navigate = useNavigate();
+  const [selectedType, setSelectedType] = useState<'client' | 'technician' | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleSelection = (type: 'client' | 'technician') => {
+    setIsAnimating(true);
+    setSelectedType(type);
+    
+    setTimeout(() => {
+      setUserType(type);
+      navigate('/verify');
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-grow flex items-center justify-center p-4">
+        <div className={`max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg transition-all ${isAnimating ? 'scale-95 opacity-50' : ''}`}>
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-primary">FixIt Pro</h1>
+            <p className="mt-2 text-gray-600">Professional services at your fingertips</p>
+          </div>
+
+          <div className="mt-10">
+            <h2 className="text-2xl font-medium text-center mb-6">I am a...</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <button
+                onClick={() => handleSelection('client')}
+                className={`group relative p-6 border-2 rounded-xl transition-all ${selectedType === 'client' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-medium">Client</h3>
+                  <p className="text-center text-gray-500 mt-2">I need a service</p>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleSelection('technician')}
+                className={`group relative p-6 border-2 rounded-xl transition-all ${selectedType === 'technician' ? 'border-accent bg-orange-50' : 'border-gray-200 hover:border-accent'}`}
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-medium">Technician</h3>
+                  <p className="text-center text-gray-500 mt-2">I provide a service</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

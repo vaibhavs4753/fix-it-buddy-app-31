@@ -1,15 +1,18 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { User, UserType, ServiceType } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  signUp: (email: string, password: string, userType: UserType) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
   updateUserProfile: (userData: Partial<User>) => void;
-  logout: () => void;
   setUserType: (type: UserType) => void;
   selectedUserType: UserType | null;
   setTechnicianType: (type: ServiceType) => void;
@@ -19,58 +22,99 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedUserType, setSelectedUserType] = useState<UserType | null>(null);
   
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          // Create user object from Supabase user
+          const userType = session.user.user_metadata?.userType as UserType || null;
+          const appUser: User = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name || '',
+            phone: session.user.phone || '',
+            type: userType,
+            serviceType: session.user.user_metadata?.serviceType as ServiceType,
+          };
+          setUser(appUser);
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        const userType = session.user.user_metadata?.userType as UserType || null;
+        const appUser: User = {
+          id: session.user.id,
+          name: session.user.user_metadata?.name || '',
+          phone: session.user.phone || '',
+          type: userType,
+          serviceType: session.user.user_metadata?.serviceType as ServiceType,
+        };
+        setUser(appUser);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (phone: string) => {
-    console.log('Sending OTP to:', phone);
-    // In a real app, this would call an API to send OTP
-    // Here we're simulating the API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const signUp = async (email: string, password: string, userType: UserType) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          userType: userType
+        }
+      }
+    });
+    
+    return { error };
   };
 
-  const verifyOtp = async (otp: string): Promise<boolean> => {
-    console.log('Verifying OTP:', otp);
-    // In a real app, this would validate the OTP via API
-    // Here we're accepting any OTP as valid (for demo)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     
-    if (selectedUserType && otp) {
-      // Create a mock user
-      const mockUser: User = {
-        id: Date.now().toString(),
-        name: '',
-        phone: '',
-        type: selectedUserType,
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return true;
-    }
-    return false;
+    return { error };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   };
 
   const updateUserProfile = (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Update user metadata in Supabase
+      supabase.auth.updateUser({
+        data: {
+          name: updatedUser.name,
+          userType: updatedUser.type,
+          serviceType: updatedUser.serviceType,
+        }
+      });
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
   };
 
   const setUserType = (type: UserType) => {
@@ -87,12 +131,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        session,
+        isAuthenticated: !!session?.user,
         isLoading,
-        login,
-        verifyOtp,
+        signUp,
+        signIn,
+        signOut,
         updateUserProfile,
-        logout,
         setUserType,
         selectedUserType,
         setTechnicianType,

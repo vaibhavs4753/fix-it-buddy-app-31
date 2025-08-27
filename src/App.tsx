@@ -9,7 +9,7 @@ import { ServiceProvider } from "./context/ServiceContext";
 
 // Pages
 import Login from "./pages/Login";
-import PhoneVerification from "./pages/PhoneVerification";
+import Auth from "./pages/Auth";
 import ClientProfileSetup from "./pages/client/ClientProfileSetup";
 import ClientHome from "./pages/client/ClientHome";
 import ClientServices from "./pages/client/ClientServices";
@@ -39,7 +39,8 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
-              <Route path="/verify" element={<PhoneVerification />} />
+              <Route path="/auth/client" element={<Auth userType="client" />} />
+              <Route path="/auth/technician" element={<Auth userType="technician" />} />
               
               {/* Client Routes */}
               <Route path="/client/profile-setup" element={

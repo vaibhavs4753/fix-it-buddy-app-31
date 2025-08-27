@@ -16,7 +16,7 @@ const Login = () => {
     
     setTimeout(() => {
       setUserType(type);
-      navigate('/verify');
+      navigate(`/auth/${type}`);
     }, 500);
   };
 

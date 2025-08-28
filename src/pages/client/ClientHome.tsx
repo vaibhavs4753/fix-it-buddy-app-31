@@ -1,14 +1,15 @@
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useService } from '@/context/ServiceContext';
 
 const ClientHome = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { getRequestsForClient } = useService();
+  const navigate = useNavigate();
   const [activeRequests, setActiveRequests] = useState(0);
 
   useEffect(() => {
@@ -19,8 +20,23 @@ const ClientHome = () => {
     }
   }, [user, getRequestsForClient]);
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-primary">FixIt Pro</h1>
+          <Button variant="outline" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-primary/10 to-primary/5 pt-20 pb-32">
         <div className="container px-4 mx-auto">

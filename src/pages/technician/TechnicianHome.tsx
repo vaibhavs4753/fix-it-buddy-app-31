@@ -9,7 +9,7 @@ import { ServiceRequest } from '@/types';
 import Footer from '@/components/Footer';
 
 const TechnicianHome = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { getRequestsForTechnician, acceptServiceRequest, cancelServiceRequest, setCurrentRequest } = useService();
   const navigate = useNavigate();
   
@@ -43,9 +43,24 @@ const TechnicianHome = () => {
     setCurrentRequest(request);
     navigate('/technician/service-details');
   };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-primary">FixIt Pro</h1>
+          <Button variant="outline" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </header>
+      
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="max-w-3xl mx-auto">
           {/* Header with status toggle */}

@@ -25,7 +25,7 @@ const TechnicianHome = () => {
   
   const handleAccept = async (request: ServiceRequest) => {
     if (user) {
-      await acceptServiceRequest(request.id, user.id);
+      await acceptServiceRequest(request.id);
       setCurrentRequest(request);
       navigate('/technician/service-details');
     }

@@ -10,7 +10,7 @@ import TrackingMap from '@/components/TrackingMap';
 import Footer from '@/components/Footer';
 
 const Tracking = () => {
-  const { currentRequest, cancelServiceRequest, nearby } = useService();
+  const { currentRequest, cancelServiceRequest, findNearbyTechnicians } = useService();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -28,12 +28,20 @@ const Tracking = () => {
   const [timeRemaining, setTimeRemaining] = useState<number>(3);
   const [clientGPSLocation, setClientGPSLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [progress, setProgress] = useState(0);
+  const [nearbyTechnicians, setNearbyTechnicians] = useState<{distance: number}[]>([]);
   
   useEffect(() => {
     if (!currentRequest) {
       navigate('/client/home');
       return;
     }
+    
+    // Load nearby technicians for the searching status
+    setNearbyTechnicians([
+      { distance: 0.5 },
+      { distance: 0.8 },
+      { distance: 1.2 }
+    ]);
     
     // Simulate finding a technician after 5 seconds
     const searchTimer = setTimeout(() => {
@@ -233,17 +241,17 @@ const Tracking = () => {
                   <CardContent>
                     <p className="text-yellow-700 mb-4">We're searching for qualified technicians in your area...</p>
                     
-                    <div className="grid grid-cols-3 gap-4">
-                      {nearby.map((tech, i) => (
-                        <div key={i} className="bg-white/60 p-4 rounded-lg text-center">
-                          <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <span className="text-yellow-700 text-sm font-bold">{i + 1}</span>
-                          </div>
-                          <p className="text-sm font-semibold text-gray-800">{tech.distance} km</p>
-                          <p className="text-xs text-gray-600">away</p>
-                        </div>
-                      ))}
-                    </div>
+                     <div className="grid grid-cols-3 gap-4">
+                       {nearbyTechnicians.map((tech, i) => (
+                         <div key={i} className="bg-white/60 p-4 rounded-lg text-center">
+                           <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                             <span className="text-yellow-700 text-sm font-bold">{i + 1}</span>
+                           </div>
+                           <p className="text-sm font-semibold text-gray-800">{tech.distance} km</p>
+                           <p className="text-xs text-gray-600">away</p>
+                         </div>
+                       ))}
+                     </div>
                   </CardContent>
                 </Card>
               )}

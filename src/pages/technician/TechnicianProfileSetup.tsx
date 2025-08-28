@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from 'lucide-react';
 import ServiceIcon from '@/components/ServiceIcon';
 import { UserType } from '@/types';
@@ -42,8 +43,26 @@ const TechnicianProfileSetup = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to set up your profile",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user.serviceType) {
+      toast({
+        title: "Service Type Missing",
+        description: "Please select a service type first",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!name.trim()) {
       toast({
@@ -66,31 +85,42 @@ const TechnicianProfileSetup = () => {
     setIsLoading(true);
     
     try {
-      const ageNumber = age ? parseInt(age, 10) : undefined;
+      // Save technician profile to Supabase
+      const { error } = await supabase
+        .from('technician_profiles')
+        .upsert({
+          user_id: user.id,
+          name: name.trim(),
+          phone: user.phone || '',
+          service_type: user.serviceType,
+          description: description.trim(),
+          profile_image_url: profileImage || null,
+          is_available: true,
+          // You can add location later when implementing GPS
+          current_location_lat: null,
+          current_location_lng: null
+        });
+
+      if (error) throw error;
       
-      // Create the technician profile object
-      const technicianData: Partial<TechnicianProfile> = {
+      // Also update local user profile
+      updateUserProfile({
         name: name.trim(),
-        age: ageNumber,
-        description: description.trim(),
-        profileImage: profileImage || undefined,
-        personalId: Math.random().toString(36).substring(2, 10).toUpperCase(),
-      };
-      
-      // Update user profile with technician data
-      updateUserProfile(technicianData);
+        age: age ? parseInt(age, 10) : undefined,
+      });
       
       toast({
-        title: "Profile Updated",
+        title: "Profile Created",
         description: "Your technician profile has been set up successfully",
       });
       
       // Redirect to home page
       navigate('/technician/home');
     } catch (error) {
+      console.error('Error creating technician profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: "Failed to create profile. Please try again.",
         variant: "destructive",
       });
     } finally {

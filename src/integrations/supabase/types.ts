@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      service_requests: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string
+          id: string
+          is_visit_required: boolean | null
+          location_address: string
+          location_lat: number
+          location_lng: number
+          media_type: string | null
+          media_urls: string[] | null
+          payment_method: string | null
+          service_type: string
+          status: string | null
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description: string
+          id?: string
+          is_visit_required?: boolean | null
+          location_address: string
+          location_lat: number
+          location_lng: number
+          media_type?: string | null
+          media_urls?: string[] | null
+          payment_method?: string | null
+          service_type: string
+          status?: string | null
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_visit_required?: boolean | null
+          location_address?: string
+          location_lat?: number
+          location_lng?: number
+          media_type?: string | null
+          media_urls?: string[] | null
+          payment_method?: string | null
+          service_type?: string
+          status?: string | null
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      technician_profiles: {
+        Row: {
+          created_at: string
+          current_location_lat: number | null
+          current_location_lng: number | null
+          description: string | null
+          id: string
+          is_available: boolean | null
+          name: string
+          phone: string | null
+          profile_image_url: string | null
+          rating: number | null
+          service_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_location_lat?: number | null
+          current_location_lng?: number | null
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          phone?: string | null
+          profile_image_url?: string | null
+          rating?: number | null
+          service_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_location_lat?: number | null
+          current_location_lng?: number | null
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          phone?: string | null
+          profile_image_url?: string | null
+          rating?: number | null
+          service_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

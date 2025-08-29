@@ -6,6 +6,7 @@ import ServiceRequestCard from '@/components/ServiceRequestCard';
 import { useAuth } from '@/context/AuthContext';
 import { useService } from '@/context/ServiceContext';
 import { ServiceRequest } from '@/types';
+import TechnicianLocationTracker from '@/components/TechnicianLocationTracker';
 import Footer from '@/components/Footer';
 
 const TechnicianHome = () => {
@@ -112,6 +113,12 @@ const TechnicianHome = () => {
               </div>
             </div>
           </div>
+          
+          {/* Location Tracking */}
+          <TechnicianLocationTracker 
+            isActive={isOnline}
+            onStatusChange={setIsOnline}
+          />
           
           {/* Requests Section */}
           {isOnline ? (

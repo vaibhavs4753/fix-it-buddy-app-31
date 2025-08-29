@@ -1,425 +1,239 @@
-
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MapPin, Clock, User, Star, Phone, Navigation } from 'lucide-react';
 import { useService } from '@/context/ServiceContext';
-import { useToast } from '@/hooks/use-toast';
-import TrackingMap from '@/components/TrackingMap';
+import { useAuth } from '@/context/AuthContext';
+import LiveTrackingMap from '@/components/LiveTrackingMap';
+import { ServiceRequest, Technician } from '@/types';
 import Footer from '@/components/Footer';
 
 const Tracking = () => {
-  const { currentRequest, cancelServiceRequest, findNearbyTechnicians } = useService();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const [assignedTechnician, setAssignedTechnician] = useState<{
-    id: string;
-    name: string;
-    rating: number;
-    distance: string;
-    estimatedTime: string;
-    profileImage?: string;
-    currentLocation: { lat: number; lng: number };
-  } | null>(null);
-  
-  const [status, setStatus] = useState<'searching' | 'found' | 'on_way' | 'arrived'>('searching');
-  const [timeRemaining, setTimeRemaining] = useState<number>(3);
-  const [clientGPSLocation, setClientGPSLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [nearbyTechnicians, setNearbyTechnicians] = useState<{distance: number}[]>([]);
-  
-  useEffect(() => {
-    if (!currentRequest) {
-      navigate('/client/home');
-      return;
-    }
-    
-    // Load nearby technicians for the searching status
-    setNearbyTechnicians([
-      { distance: 0.5 },
-      { distance: 0.8 },
-      { distance: 1.2 }
-    ]);
-    
-    // Simulate finding a technician after 5 seconds
-    const searchTimer = setTimeout(() => {
-      setStatus('found');
-      setAssignedTechnician({
-        id: 'tech-' + Math.random().toString(36).substring(2, 10),
-        name: 'Rahul Sharma',
-        rating: 4.8,
-        distance: '1.5 km away',
-        estimatedTime: '15 mins',
-        profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
-        currentLocation: { lat: 40.7150, lng: -74.002 }
-      });
-    }, 5000);
-    
-    return () => clearTimeout(searchTimer);
-  }, [currentRequest, navigate]);
-  
-  useEffect(() => {
-    if (status === 'found') {
-      const onWayTimer = setTimeout(() => {
-        setStatus('on_way');
-      }, 3000);
-      
-      return () => clearTimeout(onWayTimer);
-    }
-    
-    if (status === 'on_way') {
-      // Progress tracking
-      const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 2, 100));
-      }, 1000);
-      
-      const arrivalInterval = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            setStatus('arrived');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 60000);
-      
-      const arrivalTimer = setTimeout(() => {
-        setStatus('arrived');
-        setTimeRemaining(0);
-        setProgress(100);
-      }, 9000);
-      
-      return () => {
-        clearInterval(progressInterval);
-        clearInterval(arrivalInterval);
-        clearTimeout(arrivalTimer);
-      };
-    }
-  }, [status]);
-  
-  useEffect(() => {
-    if (status === 'on_way' && assignedTechnician && currentRequest) {
-      const moveInterval = setInterval(() => {
-        setAssignedTechnician(prev => {
-          if (!prev || !currentRequest) return prev;
-          
-          const clientLat = clientGPSLocation?.lat || currentRequest.location.lat;
-          const clientLng = clientGPSLocation?.lng || currentRequest.location.lng;
-          const moveSpeed = 0.0002; // Faster movement for better visual feedback
-          
-          const newLat = prev.currentLocation.lat + (clientLat - prev.currentLocation.lat) * moveSpeed;
-          const newLng = prev.currentLocation.lng + (clientLng - prev.currentLocation.lng) * moveSpeed;
-          
-          return {
-            ...prev,
-            currentLocation: { lat: newLat, lng: newLng }
-          };
-        });
-      }, 1000); // More frequent updates
-      
-      return () => clearInterval(moveInterval);
-    }
-  }, [status, assignedTechnician, currentRequest, clientGPSLocation]);
+  const { 
+    getRequestsForClient, 
+    availableTechnicians, 
+    currentRequest,
+    autoAssignTechnician,
+    trackTechnicianLocation,
+    findNearbyTechnicians
+  } = useService();
+  const { user } = useAuth();
+  const [activeRequests, setActiveRequests] = useState<ServiceRequest[]>([]);
+  const [assignedTechnicians, setAssignedTechnicians] = useState<{ [key: string]: Technician }>({});
+  const [technicianLocations, setTechnicianLocations] = useState<{ [key: string]: { lat: number; lng: number } }>({});
 
-  const handleLocationUpdate = (lat: number, lng: number, accuracy?: number, bearing?: number) => {
-    setClientGPSLocation({ lat, lng });
-    if (accuracy && accuracy < 20) {
-      toast({
-        title: "High Accuracy GPS",
-        description: `Location accurate to ±${Math.round(accuracy)}m`,
-      });
-    }
-  };
-  
-  const handleCancel = async () => {
-    try {
-      if (currentRequest) {
-        await cancelServiceRequest(currentRequest.id);
-        toast({
-          title: "Service Cancelled",
-          description: "Your service request has been cancelled",
-        });
-        navigate('/client/home');
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to cancel service. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleChangeLocation = () => {
-    toast({
-      title: "Location Updated",
-      description: "Your service location has been updated",
-    });
-  };
-  
-  if (!currentRequest) {
-    return null;
-  }
-  
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8 flex-grow">
-        <div className="max-w-4xl mx-auto">
-          {/* Enhanced Header with Status */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {status === 'searching' && 'Finding Your Technician'}
-              {status === 'found' && 'Technician Found!'}
-              {status === 'on_way' && 'Technician En Route'}
-              {status === 'arrived' && 'Technician Has Arrived!'}
-            </h1>
-            
-            {/* Status Progress Bar */}
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-1000 ${
-                    status === 'searching' ? 'bg-yellow-500 w-1/4' :
-                    status === 'found' ? 'bg-blue-500 w-1/2' :
-                    status === 'on_way' ? 'bg-orange-500 w-3/4' :
-                    'bg-green-500 w-full'
-                  }`}
-                  style={{ width: status === 'on_way' ? `${Math.max(50, progress)}%` : undefined }}
-                ></div>
-              </div>
-              <Badge 
-                variant={
-                  status === 'searching' ? 'secondary' :
-                  status === 'found' ? 'default' :
-                  status === 'on_way' ? 'destructive' :
-                  'default'
-                }
-                className="text-sm px-3 py-1"
-              >
-                {status === 'searching' && 'Searching...'}
-                {status === 'found' && 'Found'}
-                {status === 'on_way' && `${timeRemaining} min${timeRemaining !== 1 ? 's' : ''} away`}
-                {status === 'arrived' && 'Arrived'}
-              </Badge>
-            </div>
-          </div>
+  useEffect(() => {
+    if (user) {
+      const requests = getRequestsForClient(user.id);
+      const active = requests.filter(r => ['pending', 'accepted'].includes(r.status));
+      setActiveRequests(active);
+      
+      // Load technician data for accepted requests
+      active.forEach(async (request) => {
+        if (request.technicianId && !assignedTechnicians[request.technicianId]) {
+          const tech = availableTechnicians.find(t => t.id === request.technicianId);
+          if (tech) {
+            setAssignedTechnicians(prev => ({ ...prev, [request.technicianId!]: tech }));
+          }
           
-          {/* Enhanced GPS Tracking Map */}
-          <Card className="mb-6 overflow-hidden shadow-xl">
-            <CardContent className="p-0">
-              <TrackingMap 
-                clientLocation={{
-                  lat: clientGPSLocation?.lat || currentRequest.location.lat,
-                  lng: clientGPSLocation?.lng || currentRequest.location.lng,
-                  address: currentRequest.location.address
-                }}
-                technicianLocation={assignedTechnician ? {
-                  lat: assignedTechnician.currentLocation.lat,
-                  lng: assignedTechnician.currentLocation.lng,
-                  name: assignedTechnician.name
-                } : undefined}
-                showRoute={status !== 'searching'}
-                onLocationUpdate={handleLocationUpdate}
-                className="h-96"
-              />
+          // Track technician location
+          const location = await trackTechnicianLocation(request.technicianId);
+          if (location) {
+            setTechnicianLocations(prev => ({ ...prev, [request.technicianId!]: location }));
+          }
+        }
+      });
+    }
+  }, [user, getRequestsForClient, availableTechnicians, trackTechnicianLocation]);
+
+  const getAssignedTechnician = (request: ServiceRequest) => {
+    if (!request.technicianId) return null;
+    return assignedTechnicians[request.technicianId] || 
+           availableTechnicians.find(tech => tech.id === request.technicianId);
+  };
+
+  const handleAutoAssign = async (request: ServiceRequest) => {
+    if (request.location) {
+      const success = await autoAssignTechnician(
+        request.id, 
+        request.location.lat, 
+        request.location.lng
+      );
+      
+      if (success) {
+        // Refresh the requests to get updated data
+        const updatedRequests = getRequestsForClient(user!.id);
+        setActiveRequests(updatedRequests.filter(r => ['pending', 'accepted'].includes(r.status)));
+      }
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'accepted': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="container mx-auto p-6 space-y-6 flex-grow">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Live Service Tracking</h1>
+          <Badge variant="outline" className="px-4 py-2">
+            {activeRequests.length} Active Request{activeRequests.length !== 1 ? 's' : ''}
+          </Badge>
+        </div>
+
+        {activeRequests.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-gray-500 mb-4">
+                <Navigation className="mx-auto h-16 w-16" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Active Requests</h3>
+              <p className="text-gray-600">You don't have any active service requests to track.</p>
             </CardContent>
           </Card>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Status and Information */}
-            <div className="lg:col-span-2 space-y-6">
-              {status === 'searching' && (
-                <Card className="border-yellow-200 bg-yellow-50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-yellow-800">
-                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-yellow-600 mr-3"></div>
-                      Finding Your {currentRequest.serviceType.charAt(0).toUpperCase() + currentRequest.serviceType.slice(1)}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-yellow-700 mb-4">We're searching for qualified technicians in your area...</p>
-                    
-                     <div className="grid grid-cols-3 gap-4">
-                       {nearbyTechnicians.map((tech, i) => (
-                         <div key={i} className="bg-white/60 p-4 rounded-lg text-center">
-                           <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                             <span className="text-yellow-700 text-sm font-bold">{i + 1}</span>
-                           </div>
-                           <p className="text-sm font-semibold text-gray-800">{tech.distance} km</p>
-                           <p className="text-xs text-gray-600">away</p>
-                         </div>
-                       ))}
-                     </div>
-                  </CardContent>
-                </Card>
-              )}
+        ) : (
+          <div className="grid gap-6">
+            {activeRequests.map((request) => {
+              const technician = getAssignedTechnician(request);
               
-              {status !== 'searching' && assignedTechnician && (
-                <Card className={`${
-                  status === 'found' ? 'border-blue-200 bg-blue-50' :
-                  status === 'on_way' ? 'border-orange-200 bg-orange-50' :
-                  'border-green-200 bg-green-50'
-                } shadow-lg`}>
+              return (
+                <Card key={request.id} className="overflow-hidden">
                   <CardHeader>
-                    <CardTitle className={`flex items-center ${
-                      status === 'found' ? 'text-blue-800' :
-                      status === 'on_way' ? 'text-orange-800' :
-                      'text-green-800'
-                    }`}>
-                      <div className="mr-4">
-                        {assignedTechnician.profileImage ? (
-                          <img 
-                            src={assignedTechnician.profileImage} 
-                            alt="Technician" 
-                            className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-white shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          </div>
-                        )}
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center space-x-2">
+                        <span className="capitalize">{request.serviceType}</span>
+                        <Badge className={getStatusColor(request.status)}>
+                          {request.status}
+                        </Badge>
+                      </CardTitle>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {new Date(request.createdAt).toLocaleDateString()}
                       </div>
-                      
-                      <div>
-                        <h2 className="text-xl font-bold">{assignedTechnician.name}</h2>
-                        <div className="flex items-center mt-1">
-                          <div className="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span className="font-semibold">{assignedTechnician.rating}</span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Service Details</h4>
+                      <p className="text-gray-600">{request.description}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <MapPin className="h-4 w-4" />
+                      <span>{request.location.address}</span>
+                    </div>
+
+                    {/* Live Tracking Map */}
+                    <div className="h-80 rounded-lg overflow-hidden border">
+                      <LiveTrackingMap
+                        serviceRequest={request}
+                        technician={technician}
+                        onLocationUpdate={(location) => {
+                          if (technician) {
+                            setTechnicianLocations(prev => ({
+                              ...prev,
+                              [technician.id]: location
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {technician ? (
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-green-800">Technician Assigned</h4>
+                          <Badge variant="outline" className="text-green-700 border-green-300">
+                            <Navigation className="h-3 w-3 mr-1 animate-pulse" />
+                            Live Tracking
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="relative">
+                                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-medium">
+                                  {technician.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+                              </div>
+                              <div>
+                                <p className="font-medium">{technician.name}</p>
+                                <p className="text-sm text-gray-600 capitalize">{technician.serviceType}</p>
+                                <div className="flex items-center space-x-1 text-sm text-gray-600">
+                                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                                  <span>{technician.rating}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {technician.phone && (
+                              <Button variant="outline" size="sm" className="w-full">
+                                <Phone className="h-4 w-4 mr-2" />
+                                Call {technician.name}
+                              </Button>
+                            )}
                           </div>
-                          <span className="ml-4 text-sm">
-                            {status === 'on_way' && `Arriving in ${timeRemaining} min${timeRemaining !== 1 ? 's' : ''}`}
-                            {status === 'arrived' && 'Has arrived at your location'}
-                            {status === 'found' && assignedTechnician.distance}
-                          </span>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Status:</span>
+                              <span className="font-medium text-green-600">En Route</span>
+                            </div>
+                            {technicianLocations[technician.id] && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Last Location:</span>
+                                <span className="font-mono text-xs">
+                                  {technicianLocations[technician.id].lat.toFixed(4)}, {technicianLocations[technician.id].lng.toFixed(4)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Service:</span>
+                              <span className="font-medium capitalize">{request.serviceType}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className={`${
-                    status === 'found' ? 'text-blue-700' :
-                    status === 'on_way' ? 'text-orange-700' :
-                    'text-green-700'
-                  }`}>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <span className="block text-sm font-medium opacity-75">Service Type:</span>
-                        <span className="text-lg font-semibold capitalize">{currentRequest.serviceType}</span>
+                    ) : (
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-yellow-800">Finding Technician</h4>
+                          <Button 
+                            onClick={() => handleAutoAssign(request)}
+                            size="sm"
+                            className="bg-yellow-600 hover:bg-yellow-700"
+                          >
+                            <Navigation className="h-4 w-4 mr-2" />
+                            Auto Assign
+                          </Button>
+                        </div>
+                        <p className="text-yellow-700 text-sm mb-3">
+                          Searching for qualified technicians in your area...
+                        </p>
+                        <div className="animate-pulse flex space-x-2">
+                          <div className="h-2 bg-yellow-200 rounded flex-1"></div>
+                          <div className="h-2 bg-yellow-200 rounded flex-1"></div>
+                          <div className="h-2 bg-yellow-300 rounded flex-1"></div>
+                        </div>
                       </div>
-                      <div>
-                        <span className="block text-sm font-medium opacity-75">Visit Required:</span>
-                        <span className="text-lg font-semibold">{currentRequest.isVisitRequired ? 'Yes' : 'No'}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <span className="block text-sm font-medium opacity-75 mb-1">Service Location:</span>
-                      <span className="text-sm">
-                        {clientGPSLocation ? 'GPS Tracked Location' : currentRequest.location.address}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between pt-4 border-t border-white/30">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/80 hover:bg-white"
-                        onClick={() => {
-                          toast({
-                            title: "Calling...",
-                            description: `Would call ${assignedTechnician.name} in a real app`,
-                          });
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        Call
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/80 hover:bg-white"
-                        onClick={() => {
-                          toast({
-                            title: "Messaging...",
-                            description: `Would open chat with ${assignedTechnician.name} in a real app`,
-                          });
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        Message
-                      </Button>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
-              )}
-            </div>
-            
-            {/* Action Cards */}
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleCancel}
-                    className="w-full justify-start"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cancel Service
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={handleChangeLocation}
-                    className="w-full justify-start"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Update Location
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              {/* Service Details Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Service Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-medium">Issue:</span>
-                    <p className="text-gray-600 mt-1">{currentRequest.description}</p>
-                  </div>
-                  {currentRequest.mediaUrls.length > 0 && (
-                    <div className="text-sm">
-                      <span className="font-medium">Media Attached:</span>
-                      <p className="text-gray-600 mt-1">{currentRequest.mediaUrls.length} file(s)</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
-      
       <Footer />
     </div>
   );

@@ -14,11 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          customer_id: string
+          id: string
+          payment_method: string | null
+          service_request_id: string | null
+          status: string | null
+          stripe_session_id: string | null
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          customer_id: string
+          id?: string
+          payment_method?: string | null
+          service_request_id?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          customer_id?: string
+          id?: string
+          payment_method?: string | null
+          service_request_id?: string | null
+          status?: string | null
+          stripe_session_id?: string | null
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          name: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          rating: number | null
+          service_request_id: string | null
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          rating?: number | null
+          service_request_id?: string | null
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          rating?: number | null
+          service_request_id?: string | null
+          technician_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: true
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_requests: {
         Row: {
+          actual_price: number | null
           client_id: string
           created_at: string
           description: string
+          estimated_price: number | null
           id: string
           is_visit_required: boolean | null
           location_address: string
@@ -27,15 +150,20 @@ export type Database = {
           media_type: string | null
           media_urls: string[] | null
           payment_method: string | null
+          scheduled_time: string | null
+          service_id: string | null
           service_type: string
           status: string | null
           technician_id: string | null
           updated_at: string
+          urgency: string | null
         }
         Insert: {
+          actual_price?: number | null
           client_id: string
           created_at?: string
           description: string
+          estimated_price?: number | null
           id?: string
           is_visit_required?: boolean | null
           location_address: string
@@ -44,15 +172,20 @@ export type Database = {
           media_type?: string | null
           media_urls?: string[] | null
           payment_method?: string | null
+          scheduled_time?: string | null
+          service_id?: string | null
           service_type: string
           status?: string | null
           technician_id?: string | null
           updated_at?: string
+          urgency?: string | null
         }
         Update: {
+          actual_price?: number | null
           client_id?: string
           created_at?: string
           description?: string
+          estimated_price?: number | null
           id?: string
           is_visit_required?: boolean | null
           location_address?: string
@@ -61,19 +194,67 @@ export type Database = {
           media_type?: string | null
           media_urls?: string[] | null
           payment_method?: string | null
+          scheduled_time?: string | null
+          service_id?: string | null
           service_type?: string
           status?: string | null
           technician_id?: string | null
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          base_price: number | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
           updated_at?: string
         }
         Relationships: []
       }
       technician_profiles: {
         Row: {
+          availability_status: string | null
+          commission_rate: number | null
           created_at: string
           current_location_lat: number | null
           current_location_lng: number | null
           description: string | null
+          experience_years: number | null
+          hourly_rate: number | null
           id: string
           is_available: boolean | null
           name: string
@@ -85,10 +266,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          availability_status?: string | null
+          commission_rate?: number | null
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
           description?: string | null
+          experience_years?: number | null
+          hourly_rate?: number | null
           id?: string
           is_available?: boolean | null
           name: string
@@ -100,10 +285,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          availability_status?: string | null
+          commission_rate?: number | null
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
           description?: string | null
+          experience_years?: number | null
+          hourly_rate?: number | null
           id?: string
           is_available?: boolean | null
           name?: string

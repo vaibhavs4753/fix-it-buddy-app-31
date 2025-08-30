@@ -14,6 +14,7 @@ interface ServiceContextType {
   completeServiceRequest: (requestId: string, personalId: string) => Promise<boolean>;
   getRequestsForTechnician: (serviceType: ServiceType) => ServiceRequest[];
   getRequestsForClient: (clientId: string) => ServiceRequest[];
+  getTechniciansByServiceType: (serviceType: ServiceType) => Technician[];
   findNearbyTechnicians: (serviceType: ServiceType, lat: number, lng: number) => Promise<Technician[]>;
   currentRequest: ServiceRequest | null;
   setCurrentRequest: (request: ServiceRequest | null) => void;
@@ -323,6 +324,10 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
     return serviceRequests.filter(request => request.clientId === clientId);
   };
 
+  const getTechniciansByServiceType = (serviceType: ServiceType): Technician[] => {
+    return availableTechnicians.filter(technician => technician.serviceType === serviceType);
+  };
+
   // Calculate distance between two coordinates
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 6371; // Earth's radius in kilometers
@@ -464,6 +469,7 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
         completeServiceRequest,
         getRequestsForTechnician,
         getRequestsForClient,
+        getTechniciansByServiceType,
         findNearbyTechnicians,
         currentRequest,
         setCurrentRequest,

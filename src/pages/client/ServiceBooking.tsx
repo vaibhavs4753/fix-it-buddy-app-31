@@ -17,7 +17,7 @@ const ServiceBooking = () => {
   const { serviceType } = useParams<{ serviceType: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { createServiceRequest, setCurrentRequest } = useService();
+  const { createServiceRequest, setCurrentRequest, autoAssignTechnician } = useService();
   const { toast } = useToast();
   
   const [description, setDescription] = useState('');
@@ -109,26 +109,26 @@ const ServiceBooking = () => {
       // Auto-assign nearest technician based on location and service type
       toast({
         title: "Finding Technician",
-        description: "Automatically finding the best available technician nearby...",
+        description: `Searching for available ${serviceType}s nearby...`,
       });
       
-      // Simulate technician assignment with realistic delay
-      setTimeout(() => {
-        const assignedTechnician = {
-          id: '1',
-          name: 'Rahul Sharma',
-          rating: 4.8,
-          phone: '+91 98765 43210',
-          serviceType: serviceType as ServiceType,
-        };
-        
-        toast({
-          title: "Technician Assigned",
-          description: `${assignedTechnician.name} is heading to your location!`,
-        });
-        
+      // Use real auto-assignment with service type filtering
+      const assigned = await autoAssignTechnician(
+        serviceRequest.id,
+        selectedLocation.lat,
+        selectedLocation.lng
+      );
+      
+      if (assigned) {
         navigate('/client/tracking');
-      }, 2000);
+      } else {
+        // If no immediate assignment, still navigate to tracking
+        toast({
+          title: "Request Created",
+          description: "Your request has been created. We'll notify you when a technician is available.",
+        });
+        navigate('/client/tracking');
+      }
       
     } catch (error) {
       toast({

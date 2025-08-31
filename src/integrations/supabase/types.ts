@@ -310,6 +310,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_payment_record: {
+        Args: {
+          p_amount: number
+          p_customer_id: string
+          p_payment_method: string
+          p_service_request_id: string
+          p_stripe_session_id?: string
+          p_technician_id: string
+        }
+        Returns: string
+      }
       get_available_technicians_for_service: {
         Args: {
           client_lat: number

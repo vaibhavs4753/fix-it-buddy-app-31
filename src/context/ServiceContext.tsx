@@ -139,35 +139,35 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
 
   const loadTechnicians = async () => {
     try {
+      // Note: With new RLS policies, this will only work for authenticated technicians
+      // and will only return limited data based on the context
       const { data, error } = await supabase
         .from('technician_profiles')
-        .select('*')
+        .select('user_id, name, service_type, rating, is_available, availability_status')
         .eq('is_available', true);
 
-      if (error) throw error;
+      if (error) {
+        console.log('Technician loading restricted by RLS policies:', error);
+        setAvailableTechnicians([]);
+        return;
+      }
 
       const technicians: Technician[] = data.map(profile => ({
         id: profile.user_id,
         name: profile.name,
-        phone: profile.phone || '',
+        phone: '', // Phone not available due to RLS restrictions
         type: 'technician' as const,
         serviceType: profile.service_type as ServiceType,
-        description: profile.description || '',
+        description: '', // Description not available due to RLS restrictions
         rating: parseFloat(profile.rating?.toString() || '4.5'),
-        profileImage: profile.profile_image_url,
-        location: profile.current_location_lat && profile.current_location_lng ? {
-          lat: parseFloat(profile.current_location_lat.toString()),
-          lng: parseFloat(profile.current_location_lng.toString())
-        } : undefined
+        profileImage: undefined, // Profile image not available due to RLS restrictions
+        location: undefined // Location not available due to RLS restrictions
       }));
 
       setAvailableTechnicians(technicians);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load technicians",
-        variant: "destructive"
-      });
+      console.log('Technician loading failed:', error);
+      setAvailableTechnicians([]);
     }
   };
 
@@ -342,43 +342,30 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
 
   const findNearbyTechnicians = async (serviceType: ServiceType, lat: number, lng: number): Promise<Technician[]> => {
     try {
-      // Fetch real-time available technicians with location data
-      const { data, error } = await supabase
-        .from('technician_profiles')
-        .select('*')
-        .eq('service_type', serviceType)
-        .eq('is_available', true)
-        .eq('availability_status', 'available')
-        .not('current_location_lat', 'is', null)
-        .not('current_location_lng', 'is', null);
+      // Use the secure function to get available technicians within radius
+      const { data, error } = await supabase.rpc('get_available_technicians_for_service', {
+        service_type_param: serviceType,
+        client_lat: lat,
+        client_lng: lng,
+        radius_km: 50
+      });
 
       if (error) throw error;
 
-      const techniciansWithLocation: Technician[] = data.map(profile => ({
-        id: profile.user_id,
+      const techniciansWithLocation: Technician[] = data.map((profile: any) => ({
+        id: profile.id,
         name: profile.name,
-        phone: profile.phone || '',
+        phone: '', // Phone not available in secure function response
         type: 'technician' as const,
         serviceType: profile.service_type as ServiceType,
-        description: profile.description || '',
+        description: '', // Description not available in secure function response
         rating: parseFloat(profile.rating?.toString() || '4.5'),
-        profileImage: profile.profile_image_url,
-        location: {
-          lat: parseFloat(profile.current_location_lat.toString()),
-          lng: parseFloat(profile.current_location_lng.toString())
-        }
+        profileImage: undefined, // Profile image not available in secure function response
+        location: undefined, // Location data already filtered by distance in the function
+        distance: profile.distance_km
       }));
 
-      // Calculate distances and sort by proximity (within 50km radius)
-      const techniciansWithDistance = techniciansWithLocation
-        .map(tech => ({
-          ...tech,
-          distance: calculateDistance(lat, lng, tech.location!.lat, tech.location!.lng)
-        }))
-        .filter(tech => tech.distance <= 50) // Only include technicians within 50km
-        .sort((a, b) => a.distance - b.distance);
-
-    return techniciansWithDistance.slice(0, 5); // Return top 5 nearest
+      return techniciansWithLocation.slice(0, 5); // Return top 5 nearest
     } catch (error) {
       console.error('Error finding nearby technicians:', error);
       toast({

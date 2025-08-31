@@ -97,7 +97,7 @@ const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
 
     technicianMarker.current = new mapboxgl.Marker(techEl)
       .setLngLat([technician.location.lng, technician.location.lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${technician.name}</h3><p>${technician.serviceType} • ⭐ ${technician.rating}</p>`))
+      .setPopup(new mapboxgl.Popup().setText(`${technician.name} - ${technician.serviceType} • ⭐ ${technician.rating}`))
       .addTo(map.current);
 
     // Fit map to show both markers

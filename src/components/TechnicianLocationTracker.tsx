@@ -15,12 +15,55 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   isActive = false,
   onStatusChange
 }) => {
-  const [tracking, setTracking] = useState(isActive);
+  const [tracking, setTracking] = useState(false);
+  const [permissionRequested, setPermissionRequested] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const requestLocationPermission = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Not Available",
+        description: "Your device doesn't support location services",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setPermissionRequested(true);
+
+    try {
+      // Request permission by attempting to get current position
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setPermissionGranted(true);
+            resolve(position);
+          },
+          (error) => {
+            console.error('Location permission denied:', error);
+            toast({
+              title: "Location Permission Required",
+              description: "Please allow location access to share your location with clients",
+              variant: "destructive"
+            });
+            reject(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+          }
+        );
+      });
+    } catch (error) {
+      setPermissionGranted(false);
+    }
+  };
 
   const updateLocation = async (lat: number, lng: number, accuracy?: number) => {
     try {
@@ -120,6 +163,18 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   };
 
   useEffect(() => {
+    // Auto-request location permission on component mount
+    requestLocationPermission();
+  }, []);
+
+  useEffect(() => {
+    // Auto-start tracking when permission is granted
+    if (permissionGranted && !tracking) {
+      startTracking();
+    }
+  }, [permissionGranted]);
+
+  useEffect(() => {
     return () => {
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
@@ -155,10 +210,14 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-gray-600">
-          {tracking ? (
+          {!permissionRequested ? (
+            <p>Requesting location permission...</p>
+          ) : !permissionGranted ? (
+            <p>Location permission is required to share your location with clients. Please grant permission to continue.</p>
+          ) : tracking ? (
             <p>Your location is being shared with clients who have requested your services.</p>
           ) : (
-            <p>Enable location sharing to let clients track your progress when you're on the way.</p>
+            <p>Starting location sharing...</p>
           )}
         </div>
 
@@ -186,26 +245,21 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
           </div>
         )}
 
-        <Button
-          onClick={handleToggleTracking}
-          className={`w-full ${
-            tracking 
-              ? 'bg-red-600 hover:bg-red-700' 
-              : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {tracking ? (
-            <>
-              <WifiOff className="h-4 w-4 mr-2" />
-              Stop Location Sharing
-            </>
-          ) : (
-            <>
-              <Navigation className="h-4 w-4 mr-2" />
-              Start Location Sharing
-            </>
-          )}
-        </Button>
+        {!permissionGranted && permissionRequested && (
+          <Button
+            onClick={requestLocationPermission}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <Navigation className="h-4 w-4 mr-2" />
+            Grant Location Permission
+          </Button>
+        )}
+
+        {tracking && (
+          <div className="text-xs text-center text-green-600 font-medium">
+            ✓ Location sharing is active and automatic
+          </div>
+        )}
       </CardContent>
     </Card>
   );

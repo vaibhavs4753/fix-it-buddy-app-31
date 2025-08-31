@@ -310,7 +310,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_available_technicians_for_service: {
+        Args: {
+          client_lat: number
+          client_lng: number
+          radius_km?: number
+          service_type_param: string
+        }
+        Returns: {
+          availability_status: string
+          distance_km: number
+          id: string
+          name: string
+          rating: number
+          service_type: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

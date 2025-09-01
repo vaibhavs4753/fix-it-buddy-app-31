@@ -8,6 +8,7 @@ import { useService } from '@/context/ServiceContext';
 import { ServiceRequest } from '@/types';
 import TechnicianLocationTracker from '@/components/TechnicianLocationTracker';
 import Footer from '@/components/Footer';
+import RoleSwitcher from '@/components/RoleSwitcher';
 
 const TechnicianHome = () => {
   const { user, signOut } = useAuth();
@@ -56,9 +57,12 @@ const TechnicianHome = () => {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-primary">FixIt Pro</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <RoleSwitcher />
+            <Button variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
       

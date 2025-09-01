@@ -25,13 +25,21 @@ const Auth = ({ userType }: AuthProps) => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
+      // Use the user's actual active role, not the userType prop
       if (user.type === 'client') {
         navigate('/client/home');
       } else if (user.type === 'technician') {
         navigate('/technician/home');
+      } else {
+        // If no specific type is set, redirect to profile setup
+        if (userType === 'client') {
+          navigate('/client/profile-setup');
+        } else {
+          navigate('/technician/service-selection');
+        }
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, userType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,12 +86,8 @@ const Auth = ({ userType }: AuthProps) => {
           description: "You have been signed in successfully",
         });
         
-        // Redirect based on user type
-        if (userType === 'client') {
-          navigate('/client/profile-setup');
-        } else {
-          navigate('/technician/service-selection');
-        }
+        // Don't redirect immediately - let useEffect handle it based on user profile
+        // The useEffect will redirect based on the actual user type from the database
       }
     } catch (error) {
       toast({

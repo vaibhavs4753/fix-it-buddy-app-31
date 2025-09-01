@@ -66,8 +66,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_role: string | null
+          available_roles: string[] | null
           avatar_url: string | null
           created_at: string
+          email: string | null
           id: string
           name: string
           phone: string | null
@@ -75,8 +78,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_role?: string | null
+          available_roles?: string[] | null
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           id: string
           name: string
           phone?: string | null
@@ -84,8 +90,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_role?: string | null
+          available_roles?: string[] | null
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
           phone?: string | null
@@ -310,6 +319,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_user_role: {
+        Args: { new_role: string }
+        Returns: boolean
+      }
       create_payment_record: {
         Args: {
           p_amount: number
@@ -336,6 +349,10 @@ export type Database = {
           rating: number
           service_type: string
         }[]
+      }
+      switch_user_role: {
+        Args: { new_role: string }
+        Returns: boolean
       }
     }
     Enums: {

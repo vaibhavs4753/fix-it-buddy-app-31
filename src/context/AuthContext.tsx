@@ -85,15 +85,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single();
         
         if (profile) {
+          // Map database roles to app UserType
+          const mapRoleToUserType = (role: string): UserType => {
+            return role === 'customer' ? 'client' : role as UserType;
+          };
+
+          // Get technician service type if user is a technician
+          let serviceType: ServiceType | undefined = undefined;
+          if (profile.active_role === 'technician') {
+            const { data: techProfile } = await supabase
+              .from('technician_profiles')
+              .select('service_type')
+              .eq('user_id', session.user.id)
+              .single();
+            serviceType = techProfile?.service_type as ServiceType;
+          }
+
           const appUser: User = {
             id: session.user.id,
             name: profile.name || session.user.email,
             phone: profile.phone || '',
-            type: profile.active_role as UserType,
-            serviceType: profile.role === 'technician' ? 'electrician' : undefined,
+            type: mapRoleToUserType(profile.active_role),
+            serviceType,
           };
           setUser(appUser);
-          setAvailableRoles((profile.available_roles || ['customer']) as UserType[]);
+          setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
         }
       }
       setIsLoading(false);

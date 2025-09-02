@@ -43,6 +43,7 @@ const Auth = ({ userType }: AuthProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted', { isSignUp, email: formData.email, userType });
     
     if (isSignUp && formData.password !== formData.confirmPassword) {
       toast({
@@ -63,24 +64,30 @@ const Auth = ({ userType }: AuthProps) => {
     }
 
     setIsLoading(true);
+    console.log('Starting authentication...');
     
     try {
-      const { error } = isSignUp 
+      const result = isSignUp 
         ? await signUp(formData.email, formData.password, userType)
         : await signIn(formData.email, formData.password);
 
-      if (error) {
+      console.log('Auth result:', result);
+      
+      if (result.error) {
+        console.error('Auth error:', result.error);
         toast({
           title: "Authentication Error",
-          description: error.message || "Something went wrong",
+          description: result.error.message || "Something went wrong",
           variant: "destructive",
         });
       } else if (isSignUp) {
+        console.log('Sign up successful');
         toast({
           title: "Sign up successful",
           description: "Please check your email for verification",
         });
       } else {
+        console.log('Sign in successful');
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully",
@@ -90,6 +97,7 @@ const Auth = ({ userType }: AuthProps) => {
         // The useEffect will redirect based on the actual user type from the database
       }
     } catch (error) {
+      console.error('Auth catch error:', error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -97,6 +105,7 @@ const Auth = ({ userType }: AuthProps) => {
       });
     } finally {
       setIsLoading(false);
+      console.log('Auth process completed');
     }
   };
 

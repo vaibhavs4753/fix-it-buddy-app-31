@@ -33,31 +33,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         if (session?.user) {
-          // Fetch user profile from profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            const appUser: User = {
-              id: session.user.id,
-              name: profile.name || session.user.email,
-              phone: profile.phone || '',
-              type: profile.active_role as UserType,
-              serviceType: profile.role === 'technician' ? 'electrician' : undefined,
-            };
-            setUser(appUser);
-            setAvailableRoles((profile.available_roles || ['customer']) as UserType[]);
-          } else {
-            // Fallback to metadata if profile doesn't exist
+          try {
+            // Fetch user profile from profiles table
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle();
+            
+            console.log('Profile fetch result:', { profile, profileError });
+            
+            if (profile && !profileError) {
+              // Map database roles to app UserType
+              const mapRoleToUserType = (role: string): UserType => {
+                return role === 'customer' ? 'client' : role as UserType;
+              };
+
+              const appUser: User = {
+                id: session.user.id,
+                name: profile.name || session.user.email || '',
+                phone: profile.phone || '',
+                type: mapRoleToUserType(profile.active_role || profile.role),
+                serviceType: profile.role === 'technician' ? 'electrician' : undefined,
+              };
+              setUser(appUser);
+              setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
+            } else {
+              // Fallback to metadata if profile doesn't exist
+              const userType = session.user.user_metadata?.userType as UserType || 'client';
+              const appUser: User = {
+                id: session.user.id,
+                name: session.user.user_metadata?.name || session.user.email || '',
+                phone: session.user.phone || '',
+                type: userType,
+                serviceType: session.user.user_metadata?.serviceType as ServiceType,
+              };
+              setUser(appUser);
+              setAvailableRoles([userType]);
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            // Fallback to metadata
             const userType = session.user.user_metadata?.userType as UserType || 'client';
             const appUser: User = {
               id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email,
+              name: session.user.user_metadata?.name || session.user.email || '',
               phone: session.user.phone || '',
               type: userType,
               serviceType: session.user.user_metadata?.serviceType as ServiceType,
@@ -77,39 +100,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        // Fetch user profile from profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile) {
-          // Map database roles to app UserType
-          const mapRoleToUserType = (role: string): UserType => {
-            return role === 'customer' ? 'client' : role as UserType;
-          };
+        try {
+          // Fetch user profile from profiles table
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (profile && !profileError) {
+            // Map database roles to app UserType
+            const mapRoleToUserType = (role: string): UserType => {
+              return role === 'customer' ? 'client' : role as UserType;
+            };
 
-          // Get technician service type if user is a technician
-          let serviceType: ServiceType | undefined = undefined;
-          if (profile.active_role === 'technician') {
-            const { data: techProfile } = await supabase
-              .from('technician_profiles')
-              .select('service_type')
-              .eq('user_id', session.user.id)
-              .single();
-            serviceType = techProfile?.service_type as ServiceType;
+            // Get technician service type if user is a technician
+            let serviceType: ServiceType | undefined = undefined;
+            if (profile.active_role === 'technician') {
+              const { data: techProfile } = await supabase
+                .from('technician_profiles')
+                .select('service_type')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+              serviceType = techProfile?.service_type as ServiceType;
+            }
+
+            const appUser: User = {
+              id: session.user.id,
+              name: profile.name || session.user.email || '',
+              phone: profile.phone || '',
+              type: mapRoleToUserType(profile.active_role || profile.role),
+              serviceType,
+            };
+            setUser(appUser);
+            setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
           }
-
-          const appUser: User = {
-            id: session.user.id,
-            name: profile.name || session.user.email,
-            phone: profile.phone || '',
-            type: mapRoleToUserType(profile.active_role),
-            serviceType,
-          };
-          setUser(appUser);
-          setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
+        } catch (error) {
+          console.error('Error in getSession profile fetch:', error);
         }
       }
       setIsLoading(false);

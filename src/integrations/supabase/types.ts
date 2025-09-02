@@ -350,6 +350,10 @@ export type Database = {
           service_type: string
         }[]
       }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
       switch_user_role: {
         Args: { new_role: string }
         Returns: boolean

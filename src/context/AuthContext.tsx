@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, userType: UserType) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   updateUserProfile: (userData: Partial<User>) => Promise<void>;
   setUserType: (type: UserType) => void;
   selectedUserType: UserType | null;
@@ -178,6 +179,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAvailableRoles([]);
   };
 
+  const resetPassword = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    });
+    
+    return { error };
+  };
+
   const updateUserProfile = async (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
@@ -246,6 +257,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signUp,
         signIn,
         signOut,
+        resetPassword,
         updateUserProfile,
         setUserType,
         selectedUserType,

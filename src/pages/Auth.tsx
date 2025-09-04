@@ -11,10 +11,11 @@ interface AuthProps {
 }
 
 const Auth = ({ userType }: AuthProps) => {
-  const { signUp, signIn, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { signUp, signIn, resetPassword, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -50,7 +51,48 @@ const Auth = ({ userType }: AuthProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted', { isSignUp, email: formData.email, userType });
+    console.log('Form submitted', { isSignUp, isForgotPassword, email: formData.email, userType });
+    
+    // Handle forgot password
+    if (isForgotPassword) {
+      if (!formData.email) {
+        toast({
+          title: "Email required",
+          description: "Please enter your email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const result = await resetPassword(formData.email);
+        
+        if (result.error) {
+          toast({
+            title: "Password Reset Error",
+            description: result.error.message || "Something went wrong",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password Reset Email Sent",
+            description: "Please check your email for password reset instructions",
+          });
+          setIsForgotPassword(false);
+        }
+      } catch (error) {
+        console.error('Reset password error:', error);
+        toast({
+          title: "Error",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     
     if (isSignUp && formData.password !== formData.confirmPassword) {
       toast({
@@ -154,12 +196,15 @@ const Auth = ({ userType }: AuthProps) => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h1 className="text-2xl font-bold">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isForgotPassword ? 'Reset Password' : (isSignUp ? 'Create Account' : 'Welcome Back')}
           </h1>
           <p className="mt-2 text-gray-600">
-            {isSignUp 
-              ? `Sign up as a ${userType}` 
-              : `Sign in to your ${userType} account`
+            {isForgotPassword 
+              ? "Enter your email to receive password reset instructions"
+              : (isSignUp 
+                ? `Sign up as a ${userType}` 
+                : `Sign in to your ${userType} account`
+              )
             }
           </p>
         </div>
@@ -181,23 +226,25 @@ const Auth = ({ userType }: AuthProps) => {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleInputChange}
-              className="w-full"
-            />
-          </div>
+          {!isForgotPassword && (
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full"
+              />
+            </div>
+          )}
 
-          {isSignUp && (
+          {isSignUp && !isForgotPassword && (
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm Password
@@ -221,22 +268,44 @@ const Auth = ({ userType }: AuthProps) => {
             disabled={isLoading}
           >
             {isLoading 
-              ? (isSignUp ? "Creating Account..." : "Signing In...") 
-              : (isSignUp ? "Create Account" : "Sign In")
+              ? (isForgotPassword ? "Sending Reset Email..." : (isSignUp ? "Creating Account..." : "Signing In..."))
+              : (isForgotPassword ? "Send Reset Email" : (isSignUp ? "Create Account" : "Sign In"))
             }
           </Button>
         </form>
 
         <div className="text-center space-y-2">
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-primary hover:underline text-sm"
-          >
-            {isSignUp 
-              ? "Already have an account? Sign in" 
-              : "Don't have an account? Sign up"
-            }
-          </button>
+          {!isForgotPassword && (
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-primary hover:underline text-sm"
+            >
+              {isSignUp 
+                ? "Already have an account? Sign in" 
+                : "Don't have an account? Sign up"
+              }
+            </button>
+          )}
+          
+          {!isSignUp && !isForgotPassword && (
+            <div>
+              <button
+                onClick={() => setIsForgotPassword(true)}
+                className="text-primary hover:underline text-sm"
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
+          
+          {isForgotPassword && (
+            <button
+              onClick={() => setIsForgotPassword(false)}
+              className="text-primary hover:underline text-sm"
+            >
+              Back to sign in
+            </button>
+          )}
           
           <div>
             <button 

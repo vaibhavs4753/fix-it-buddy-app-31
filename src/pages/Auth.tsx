@@ -53,6 +53,8 @@ const Auth = ({ userType }: AuthProps) => {
     e.preventDefault();
     console.log('Form submitted', { isSignUp, isForgotPassword, email: formData.email, userType });
     
+    if (isLoading) return; // Prevent multiple submissions
+    
     // Handle forgot password
     if (isForgotPassword) {
       if (!formData.email) {
@@ -167,9 +169,7 @@ const Auth = ({ userType }: AuthProps) => {
           title: "Welcome back!",
           description: "You have been signed in successfully",
         });
-        
-        // Don't redirect immediately - let useEffect handle it based on user profile
-        // The useEffect will redirect based on the actual user type from the database
+        // Success - the useEffect will handle redirection
       }
     } catch (error) {
       console.error('Auth catch error:', error);
@@ -265,7 +265,7 @@ const Auth = ({ userType }: AuthProps) => {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || authLoading}
           >
             {isLoading 
               ? (isForgotPassword ? "Sending Reset Email..." : (isSignUp ? "Creating Account..." : "Signing In..."))

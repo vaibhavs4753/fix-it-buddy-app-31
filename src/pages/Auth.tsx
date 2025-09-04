@@ -82,9 +82,35 @@ const Auth = ({ userType }: AuthProps) => {
       
       if (result.error) {
         console.error('Auth error:', result.error);
+        let errorTitle = "Authentication Error";
+        let errorDescription = result.error.message || "Something went wrong";
+        
+        // Handle specific error cases
+        if (result.error.message?.includes('Invalid login credentials')) {
+          if (isSignUp) {
+            errorTitle = "Sign Up Failed";
+            errorDescription = "Unable to create account. Please check your details.";
+          } else {
+            errorTitle = "Sign In Failed";
+            errorDescription = "Invalid email or password. Please check your credentials.";
+          }
+        } else if (result.error.message?.includes('User not found')) {
+          errorTitle = "Account Not Found";
+          errorDescription = "No account found with this email. Please create an account first.";
+        } else if (result.error.message?.includes('Email not confirmed')) {
+          errorTitle = "Email Not Verified";
+          errorDescription = "Please check your email and click the verification link before signing in.";
+        } else if (result.error.message?.includes('User already registered')) {
+          errorTitle = "Account Already Exists";
+          errorDescription = "An account with this email already exists. Please sign in instead.";
+        } else if (result.error.message?.includes('Password')) {
+          errorTitle = "Password Error";
+          errorDescription = "Please check your password and try again.";
+        }
+        
         toast({
-          title: "Authentication Error",
-          description: result.error.message || "Something went wrong",
+          title: errorTitle,
+          description: errorDescription,
           variant: "destructive",
         });
       } else if (isSignUp) {

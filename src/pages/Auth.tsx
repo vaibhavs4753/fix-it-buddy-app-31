@@ -11,7 +11,7 @@ interface AuthProps {
 }
 
 const Auth = ({ userType }: AuthProps) => {
-  const { signUp, signIn, isAuthenticated, user } = useAuth();
+  const { signUp, signIn, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,22 +24,29 @@ const Auth = ({ userType }: AuthProps) => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
+    console.log('Auth redirect check:', { isAuthenticated, user, authLoading });
+    
+    if (isAuthenticated && user && !authLoading) {
+      console.log('User authenticated, redirecting...', user);
       // Use the user's actual active role, not the userType prop
       if (user.type === 'client') {
+        console.log('Redirecting to client home');
         navigate('/client/home');
       } else if (user.type === 'technician') {
+        console.log('Redirecting to technician home');
         navigate('/technician/home');
       } else {
         // If no specific type is set, redirect to profile setup
         if (userType === 'client') {
+          console.log('Redirecting to client profile setup');
           navigate('/client/profile-setup');
         } else {
+          console.log('Redirecting to technician service selection');
           navigate('/technician/service-selection');
         }
       }
     }
-  }, [isAuthenticated, user, navigate, userType]);
+  }, [isAuthenticated, user, navigate, userType, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

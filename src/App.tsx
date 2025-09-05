@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import ClientProfileSetup from "./pages/client/ClientProfileSetup";
 import ClientHome from "./pages/client/ClientHome";
 import ClientServices from "./pages/client/ClientServices";
+import ClientRequests from "./pages/client/ClientRequests";
 import ServiceBooking from "./pages/client/ServiceBooking";
 
 import Payment from "./pages/client/Payment";
@@ -56,6 +57,11 @@ const App = () => (
               <Route path="/client/services" element={
                 <ProtectedRoute userType="client">
                   <ClientServices />
+                </ProtectedRoute>
+              } />
+              <Route path="/client/requests" element={
+                <ProtectedRoute userType="client">
+                  <ClientRequests />
                 </ProtectedRoute>
               } />
               <Route path="/client/booking/:serviceType" element={

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      location_history: {
+        Row: {
+          accuracy: number | null
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          service_session_id: string | null
+          technician_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          service_session_id?: string | null
+          technician_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          service_session_id?: string | null
+          technician_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -220,6 +250,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          service_request_id: string
+          started_at: string
+          status: string
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          service_request_id: string
+          started_at?: string
+          status?: string
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          service_request_id?: string
+          started_at?: string
+          status?: string
+          technician_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       services: {
         Row: {

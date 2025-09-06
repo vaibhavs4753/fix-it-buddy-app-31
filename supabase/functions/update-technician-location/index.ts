@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
 
-    const { lat, lng, availability_status } = await req.json();
+    const { lat, lng, availability_status, service_session_id, accuracy } = await req.json();
 
     // Validate inputs
     if (typeof lat !== 'number' || typeof lng !== 'number') {
@@ -49,7 +49,7 @@ serve(async (req) => {
     }
 
     // Update technician location and availability
-    const { error } = await supabaseClient
+    const { error: profileUpdateError } = await supabaseClient
       .from('technician_profiles')
       .update({
         current_location_lat: lat,
@@ -59,8 +59,25 @@ serve(async (req) => {
       })
       .eq('user_id', user.id);
 
-    if (error) {
-      console.error('Error updating location:', error);
+    // Store location history if service session is active
+    if (service_session_id) {
+      const { error: historyError } = await supabaseClient
+        .from('location_history')
+        .insert({
+          service_session_id,
+          technician_id: user.id,
+          lat,
+          lng,
+          accuracy: accuracy || null
+        });
+
+      if (historyError) {
+        console.error('Error storing location history:', historyError);
+      }
+    }
+
+    if (profileUpdateError) {
+      console.error('Error updating location:', profileUpdateError);
       return new Response(
         JSON.stringify({ error: 'Failed to update location' }),
         { 

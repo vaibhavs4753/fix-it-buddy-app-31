@@ -12,6 +12,7 @@ interface ServiceContextType {
   acceptServiceRequest: (requestId: string) => Promise<void>;
   cancelServiceRequest: (requestId: string) => Promise<void>;
   completeServiceRequest: (requestId: string, personalId: string) => Promise<boolean>;
+  completeServiceRequestAsClient: (requestId: string) => Promise<boolean>;
   getRequestsForTechnician: (serviceType: ServiceType) => ServiceRequest[];
   getRequestsForClient: (clientId: string) => ServiceRequest[];
   getTechniciansByServiceType: (serviceType: ServiceType) => Technician[];
@@ -280,6 +281,32 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const completeServiceRequestAsClient = async (requestId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('service_requests')
+        .update({ status: 'completed' })
+        .eq('id', requestId)
+        .eq('client_id', user?.id); // Ensure only the client can complete their own request
+
+      if (error) throw error;
+
+      await refreshRequests();
+      toast({
+        title: "Service Completed",
+        description: "Thank you for confirming service completion!"
+      });
+      return true;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to complete service request",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const completeServiceRequest = async (requestId: string, personalId: string): Promise<boolean> => {
     if (!personalId) {
       toast({
@@ -453,7 +480,8 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
         createServiceRequest,
         acceptServiceRequest,
         cancelServiceRequest,
-        completeServiceRequest,
+    completeServiceRequest,
+    completeServiceRequestAsClient,
         getRequestsForTechnician,
         getRequestsForClient,
         getTechniciansByServiceType,

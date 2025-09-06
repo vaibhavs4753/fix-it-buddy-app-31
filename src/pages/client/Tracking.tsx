@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Clock, User, Star, Phone, Navigation } from 'lucide-react';
+import { MapPin, Clock, User, Star, Phone, Navigation, CheckCircle } from 'lucide-react';
 import { useService } from '@/context/ServiceContext';
 import { useAuth } from '@/context/AuthContext';
 import LiveTrackingMap from '@/components/LiveTrackingMap';
 import { ServiceRequest, Technician } from '@/types';
 import Footer from '@/components/Footer';
+import { useServiceSession } from '@/hooks/useServiceSession';
+import { useToast } from '@/hooks/use-toast';
 
 const Tracking = () => {
   const { 
@@ -16,9 +18,11 @@ const Tracking = () => {
     currentRequest,
     autoAssignTechnician,
     trackTechnicianLocation,
-    findNearbyTechnicians
+    findNearbyTechnicians,
+    completeServiceRequestAsClient
   } = useService();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [activeRequests, setActiveRequests] = useState<ServiceRequest[]>([]);
   const [assignedTechnicians, setAssignedTechnicians] = useState<{ [key: string]: Technician }>({});
   const [technicianLocations, setTechnicianLocations] = useState<{ [key: string]: { lat: number; lng: number } }>({});
@@ -69,6 +73,28 @@ const Tracking = () => {
     }
   };
 
+  const handleCompleteService = async (requestId: string) => {
+    try {
+      await completeServiceRequestAsClient(requestId);
+      toast({
+        title: "Service Completed",
+        description: "Thank you for using our service!"
+      });
+      
+      // Refresh the requests to update UI
+      if (user) {
+        const updatedRequests = getRequestsForClient(user.id);
+        setActiveRequests(updatedRequests.filter(r => ['pending', 'accepted'].includes(r.status)));
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to complete service",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -104,131 +130,22 @@ const Tracking = () => {
               const technician = getAssignedTechnician(request);
               
               return (
-                <Card key={request.id} className="overflow-hidden">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center space-x-2">
-                        <span className="capitalize">{request.serviceType}</span>
-                        <Badge className={getStatusColor(request.status)}>
-                          {request.status}
-                        </Badge>
-                      </CardTitle>
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {new Date(request.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Service Details</h4>
-                      <p className="text-gray-600">{request.description}</p>
-                    </div>
-
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{request.location.address}</span>
-                    </div>
-
-                    {/* Live Tracking Map */}
-                    <div className="h-80 rounded-lg overflow-hidden border">
-                      <LiveTrackingMap
-                        serviceRequest={request}
-                        technician={technician}
-                        onLocationUpdate={(location) => {
-                          if (technician) {
-                            setTechnicianLocations(prev => ({
-                              ...prev,
-                              [technician.id]: location
-                            }));
-                          }
-                        }}
-                      />
-                    </div>
-
-                    {technician ? (
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-green-800">Technician Assigned</h4>
-                          <Badge variant="outline" className="text-green-700 border-green-300">
-                            <Navigation className="h-3 w-3 mr-1 animate-pulse" />
-                            Live Tracking
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="relative">
-                                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-medium">
-                                  {technician.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
-                              </div>
-                              <div>
-                                <p className="font-medium">{technician.name}</p>
-                                <p className="text-sm text-gray-600 capitalize">{technician.serviceType}</p>
-                                <div className="flex items-center space-x-1 text-sm text-gray-600">
-                                  <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                                  <span>{technician.rating}</span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {technician.phone && (
-                              <Button variant="outline" size="sm" className="w-full">
-                                <Phone className="h-4 w-4 mr-2" />
-                                Call {technician.name}
-                              </Button>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Status:</span>
-                              <span className="font-medium text-green-600">En Route</span>
-                            </div>
-                            {technicianLocations[technician.id] && (
-                              <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Last Location:</span>
-                                <span className="font-mono text-xs">
-                                  {technicianLocations[technician.id].lat.toFixed(4)}, {technicianLocations[technician.id].lng.toFixed(4)}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Service:</span>
-                              <span className="font-medium capitalize">{request.serviceType}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-yellow-50 p-4 rounded-lg">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-yellow-800">Finding Technician</h4>
-                          <Button 
-                            onClick={() => handleAutoAssign(request)}
-                            size="sm"
-                            className="bg-yellow-600 hover:bg-yellow-700"
-                          >
-                            <Navigation className="h-4 w-4 mr-2" />
-                            Auto Assign
-                          </Button>
-                        </div>
-                        <p className="text-yellow-700 text-sm mb-3">
-                          Searching for qualified technicians in your area...
-                        </p>
-                        <div className="animate-pulse flex space-x-2">
-                          <div className="h-2 bg-yellow-200 rounded flex-1"></div>
-                          <div className="h-2 bg-yellow-200 rounded flex-1"></div>
-                          <div className="h-2 bg-yellow-300 rounded flex-1"></div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <ServiceRequestTracker
+                  key={request.id}
+                  request={request}
+                  technician={technician}
+                  onAutoAssign={() => handleAutoAssign(request)}
+                  onCompleteService={() => handleCompleteService(request.id)}
+                  onLocationUpdate={(location) => {
+                    if (technician) {
+                      setTechnicianLocations(prev => ({
+                        ...prev,
+                        [technician.id]: location
+                      }));
+                    }
+                  }}
+                  technicianLocation={technician ? technicianLocations[technician.id] : undefined}
+                />
               );
             })}
           </div>
@@ -236,6 +153,197 @@ const Tracking = () => {
       </div>
       <Footer />
     </div>
+  );
+};
+
+// Enhanced Service Request Tracker Component
+interface ServiceRequestTrackerProps {
+  request: ServiceRequest;
+  technician?: Technician;
+  onAutoAssign: () => void;
+  onCompleteService: () => void;
+  onLocationUpdate: (location: { lat: number; lng: number }) => void;
+  technicianLocation?: { lat: number; lng: number };
+}
+
+const ServiceRequestTracker: React.FC<ServiceRequestTrackerProps> = ({
+  request,
+  technician,
+  onAutoAssign,
+  onCompleteService,
+  onLocationUpdate,
+  technicianLocation
+}) => {
+  const { currentSession } = useServiceSession(request.id);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'accepted': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-2">
+            <span className="capitalize">{request.serviceType}</span>
+            <Badge className={getStatusColor(request.status)}>
+              {request.status}
+            </Badge>
+            {currentSession && (
+              <Badge variant="outline" className="text-green-700 border-green-300">
+                Session: {currentSession.status}
+              </Badge>
+            )}
+          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <div className="text-sm text-gray-500 flex items-center">
+              <Clock className="h-4 w-4 mr-1" />
+              {new Date(request.createdAt).toLocaleDateString()}
+            </div>
+            {technician && (
+              <Button
+                onClick={onCompleteService}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Complete Service
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <div>
+          <h4 className="font-medium mb-2">Service Details</h4>
+          <p className="text-gray-600">{request.description}</p>
+        </div>
+
+        <div className="flex items-center space-x-2 text-gray-600">
+          <MapPin className="h-4 w-4" />
+          <span>{request.location.address}</span>
+        </div>
+
+        {/* Live Tracking Map */}
+        <div className="h-80 rounded-lg overflow-hidden border">
+          <LiveTrackingMap
+            serviceRequest={request}
+            technician={technician}
+            onLocationUpdate={onLocationUpdate}
+          />
+        </div>
+
+        {technician ? (
+          <div className="bg-green-50 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-green-800">Technician Assigned</h4>
+              <div className="flex items-center space-x-2">
+                {currentSession && (
+                  <Badge 
+                    variant="outline" 
+                    className={currentSession.status === 'active' ? 
+                      "text-green-700 border-green-300" : 
+                      "text-yellow-700 border-yellow-300"
+                    }
+                  >
+                    <Navigation className="h-3 w-3 mr-1 animate-pulse" />
+                    {currentSession.status === 'active' ? 'Live Tracking' : 'Paused'}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-medium">
+                      {technician.name.charAt(0).toUpperCase()}
+                    </div>
+                    {currentSession?.status === 'active' && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{technician.name}</p>
+                    <p className="text-sm text-gray-600 capitalize">{technician.serviceType}</p>
+                    <div className="flex items-center space-x-1 text-sm text-gray-600">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span>{technician.rating}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {technician.phone && (
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call {technician.name}
+                  </Button>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-green-600">
+                    {currentSession?.status === 'active' ? 'En Route' : 
+                     currentSession?.status === 'paused' ? 'Paused' : 'Assigned'}
+                  </span>
+                </div>
+                {technicianLocation && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Last Location:</span>
+                    <span className="font-mono text-xs">
+                      {technicianLocation.lat.toFixed(4)}, {technicianLocation.lng.toFixed(4)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Service:</span>
+                  <span className="font-medium capitalize">{request.serviceType}</span>
+                </div>
+                {currentSession && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Session:</span>
+                    <span className="font-medium">
+                      {new Date(currentSession.started_at).toLocaleTimeString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-yellow-800">Finding Technician</h4>
+              <Button 
+                onClick={onAutoAssign}
+                size="sm"
+                className="bg-yellow-600 hover:bg-yellow-700"
+              >
+                <Navigation className="h-4 w-4 mr-2" />
+                Auto Assign
+              </Button>
+            </div>
+            <p className="text-yellow-700 text-sm mb-3">
+              Searching for qualified technicians in your area...
+            </p>
+            <div className="animate-pulse flex space-x-2">
+              <div className="h-2 bg-yellow-200 rounded flex-1"></div>
+              <div className="h-2 bg-yellow-200 rounded flex-1"></div>
+              <div className="h-2 bg-yellow-300 rounded flex-1"></div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

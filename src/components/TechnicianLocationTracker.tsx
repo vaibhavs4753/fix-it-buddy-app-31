@@ -2,18 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Navigation, Clock, Wifi, WifiOff } from 'lucide-react';
+import { MapPin, Navigation, Clock, Wifi, WifiOff, Play, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useServiceSession } from '@/hooks/useServiceSession';
 
 interface TechnicianLocationTrackerProps {
   isActive?: boolean;
   onStatusChange?: (isActive: boolean) => void;
+  serviceRequestId?: string;
+  clientId?: string;
 }
 
 const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   isActive = false,
-  onStatusChange
+  onStatusChange,
+  serviceRequestId,
+  clientId
 }) => {
   const [tracking, setTracking] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
@@ -23,6 +28,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   const [watchId, setWatchId] = useState<number | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const { toast } = useToast();
+  const { currentSession, startSession, endSession, toggleSessionStatus } = useServiceSession(serviceRequestId);
 
   const requestLocationPermission = async () => {
     if (!navigator.geolocation) {
@@ -71,7 +77,9 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
         body: {
           lat,
           lng,
-          availability_status: tracking ? 'available' : 'offline'
+          availability_status: tracking ? 'available' : 'offline',
+          service_session_id: currentSession?.id,
+          accuracy
         }
       });
 
@@ -92,7 +100,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
     }
   };
 
-  const startTracking = () => {
+  const startTracking = async () => {
     if (!navigator.geolocation) {
       toast({
         title: "Location Not Available",
@@ -102,10 +110,27 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
       return;
     }
 
+    // Start service session if serviceRequestId and clientId are provided
+    let sessionId = null;
+    if (serviceRequestId && clientId) {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        sessionId = await startSession(serviceRequestId, userId, clientId);
+        if (!sessionId) {
+          toast({
+            title: "Session Error",
+            description: "Failed to start service session",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    }
+
     const options = {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 30000
+      maximumAge: 15000 // Reduced for more frequent updates
     };
 
     const id = navigator.geolocation.watchPosition(
@@ -130,11 +155,13 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
 
     toast({
       title: "Live Tracking Started",
-      description: "Your location is now being shared with clients"
+      description: sessionId ? 
+        "Service session active - location sharing with client" :
+        "Your location is now being shared"
     });
   };
 
-  const stopTracking = () => {
+  const stopTracking = async () => {
     if (watchId) {
       navigator.geolocation.clearWatch(watchId);
       setWatchId(null);
@@ -143,14 +170,19 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
     setTracking(false);
     onStatusChange?.(false);
 
+    // End service session if active
+    if (currentSession) {
+      await endSession(currentSession.id);
+    }
+
     // Update availability to offline
     if (currentLocation) {
       updateLocation(currentLocation.lat, currentLocation.lng);
     }
 
     toast({
-      title: "Tracking Stopped",
-      description: "You are no longer sharing your location"
+      title: "Service Completed",
+      description: "Location tracking stopped and service session ended"
     });
   };
 
@@ -255,7 +287,71 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
           </Button>
         )}
 
-        {tracking && (
+        {/* Service Session Controls */}
+        {permissionGranted && serviceRequestId && (
+          <div className="space-y-2">
+            {!currentSession ? (
+              <Button
+                onClick={handleToggleTracking}
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={!clientId}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start Service Session
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-green-800">
+                      Service Session Active
+                    </p>
+                    <p className="text-xs text-green-600">
+                      Status: {currentSession.status}
+                    </p>
+                  </div>
+                  <Badge className="bg-green-600">
+                    Live
+                  </Badge>
+                </div>
+                
+                <div className="flex space-x-2">
+                  {currentSession.status === 'active' ? (
+                    <Button
+                      onClick={() => toggleSessionStatus(currentSession.id, 'paused')}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Pause Service
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => toggleSessionStatus(currentSession.id, 'active')}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Resume Service
+                    </Button>
+                  )}
+                  
+                  <Button
+                    onClick={stopTracking}
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Square className="h-4 w-4 mr-1" />
+                    End Service
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tracking && !serviceRequestId && (
           <div className="text-xs text-center text-green-600 font-medium">
             ✓ Location sharing is active and automatic
           </div>

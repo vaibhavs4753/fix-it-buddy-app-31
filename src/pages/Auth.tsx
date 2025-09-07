@@ -192,13 +192,13 @@ const Auth = ({ userType }: AuthProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="max-w-md w-full space-y-8 p-8 bg-card rounded-xl shadow-lg">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-foreground">
             {isForgotPassword ? 'Reset Password' : (isSignUp ? 'Create Account' : 'Welcome Back')}
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             {isForgotPassword 
               ? "Enter your email to receive password reset instructions"
               : (isSignUp 
@@ -211,7 +211,7 @@ const Auth = ({ userType }: AuthProps) => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
               Email Address
             </label>
             <Input
@@ -228,7 +228,7 @@ const Auth = ({ userType }: AuthProps) => {
 
           {!isForgotPassword && (
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
                 Password
               </label>
               <Input
@@ -246,7 +246,7 @@ const Auth = ({ userType }: AuthProps) => {
 
           {isSignUp && !isForgotPassword && (
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
                 Confirm Password
               </label>
               <Input
@@ -310,7 +310,7 @@ const Auth = ({ userType }: AuthProps) => {
           <div>
             <button 
               onClick={() => navigate('/')} 
-              className="text-gray-500 hover:underline text-sm"
+              className="text-muted-foreground hover:underline text-sm hover:text-foreground"
             >
               Back to user selection
             </button>

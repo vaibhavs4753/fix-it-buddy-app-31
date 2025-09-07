@@ -51,11 +51,11 @@ const ServiceSelection = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="max-w-lg w-full space-y-8 p-8 bg-white rounded-xl shadow-lg slide-in">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="max-w-lg w-full space-y-8 p-8 bg-card rounded-xl shadow-lg slide-in">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Select Your Service</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Select Your Service</h1>
+          <p className="mt-2 text-muted-foreground">
             What type of service do you provide?
           </p>
         </div>
@@ -84,10 +84,10 @@ const ServiceSelection = () => {
           <button
             onClick={handleContinue}
             disabled={isLoading}
-            className={`w-full py-3 rounded-lg text-white font-medium transition-all ${
+            className={`w-full py-3 rounded-lg font-medium transition-all ${
               selectedService 
-                ? 'bg-primary hover:bg-primary/90' 
-                : 'bg-gray-300 cursor-not-allowed'
+                ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                : 'bg-muted cursor-not-allowed text-muted-foreground'
             }`}
           >
             {isLoading ? "Processing..." : "Continue"}

@@ -51,19 +51,25 @@ const Payment = () => {
     }
   };
   
-  // Calculate estimated cost based on service type
-  const getEstimatedCost = () => {
-    switch (currentRequest.serviceType) {
-      case 'electrician':
-        return '₹500 - ₹1,500';
-      case 'mechanic':
-        return '₹800 - ₹2,000';
-      case 'plumber':
-        return '₹400 - ₹1,200';
-      default:
-        return '₹500 - ₹1,500';
-    }
+  // Calculate pricing breakdown
+  const getServiceBreakdown = () => {
+    const baseAmount = 295.05; // Base amount before GST and app charge
+    const gstRate = 0.01; // 1%
+    const appChargeRate = 0.01; // 1%
+    
+    const gstAmount = baseAmount * gstRate;
+    const appChargeAmount = baseAmount * appChargeRate;
+    const totalAmount = baseAmount + gstAmount + appChargeAmount;
+    
+    return {
+      baseAmount: Math.round(baseAmount * 100) / 100,
+      gstAmount: Math.round(gstAmount * 100) / 100,
+      appChargeAmount: Math.round(appChargeAmount * 100) / 100,
+      totalAmount: Math.round(totalAmount * 100) / 100
+    };
   };
+
+  const pricing = getServiceBreakdown();
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -101,15 +107,37 @@ const Payment = () => {
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-600">Estimated Cost:</span>
-                <span className="font-medium">{getEstimatedCost()}</span>
+                <span className="text-gray-600">Service Charge:</span>
+                <span className="font-medium">₹{pricing.baseAmount}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-gray-600">GST (1%):</span>
+                <span className="font-medium">₹{pricing.gstAmount}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="text-gray-600">App Charge (1%):</span>
+                <span className="font-medium">₹{pricing.appChargeAmount}</span>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-900 font-semibold">Total Amount:</span>
+                  <span className="font-semibold text-lg">₹{pricing.totalAmount}</span>
+                </div>
               </div>
             </div>
             
             <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-500">
-                * Final cost will depend on the scope of work required after diagnosis
-              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800 font-medium mb-2">
+                  💡 Important Information
+                </p>
+                <p className="text-sm text-blue-700">
+                  This is a basic minimum charge of ₹299 to book the technician and secure your service appointment. The final cost may increase based on the actual work required after the technician's assessment and diagnosis.
+                </p>
+              </div>
             </div>
           </div>
           

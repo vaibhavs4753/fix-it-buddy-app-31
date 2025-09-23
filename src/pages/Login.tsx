@@ -21,9 +21,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="service-background flex flex-col">
       <div className="flex-grow flex items-center justify-center p-4">
-        <div className={`max-w-md w-full space-y-8 p-8 bg-card rounded-xl shadow-lg transition-all ${isAnimating ? 'scale-95 opacity-50' : ''}`}>
+        <div className={`max-w-md w-full space-y-8 p-8 bg-card/90 backdrop-blur-sm rounded-xl shadow-2xl border border-white/10 transition-all ${isAnimating ? 'scale-95 opacity-50' : ''}`}>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-primary">FixIt Pro</h1>
             <p className="mt-2 text-muted-foreground">Professional services at your fingertips</p>

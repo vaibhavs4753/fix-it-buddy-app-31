@@ -416,10 +416,10 @@ const TrackingMap = ({
     <div className={`relative ${className}`}>
       <div 
         ref={mapRef} 
-        className="w-full h-full bg-gray-100 rounded-lg shadow-lg border overflow-hidden"
+        className="w-full h-full bg-white rounded-lg shadow-lg border overflow-hidden"
       >
         <div className="w-full h-full flex items-center justify-center">
-          <p className="text-gray-500">Loading GPS tracking map...</p>
+          <p className="text-black">Loading GPS tracking map...</p>
         </div>
       </div>
       
@@ -457,19 +457,19 @@ const TrackingMap = ({
         <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border">
           <div className="flex items-center space-x-2 mb-3">
             <Navigation className="h-5 w-5 text-blue-600" />
-            <span className="font-semibold text-gray-900">Live Tracking</span>
+            <span className="font-semibold text-black">Live Tracking</span>
           </div>
           
           {isCalculating ? (
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-600"></div>
-              <span className="text-sm text-gray-600">Calculating route...</span>
+              <span className="text-sm text-black">Calculating route...</span>
             </div>
           ) : routeInfo ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <MapPin className="h-4 w-4 text-black" />
                   <span className="text-sm font-medium">Distance:</span>
                 </div>
                 <span className="text-sm font-bold text-blue-600">{routeInfo.distance}</span>
@@ -477,7 +477,7 @@ const TrackingMap = ({
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
+                  <Clock className="h-4 w-4 text-black" />
                   <span className="text-sm font-medium">ETA:</span>
                 </div>
                 <span className="text-sm font-bold text-green-600">{routeInfo.duration}</span>
@@ -493,7 +493,7 @@ const TrackingMap = ({
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
             <span className="text-sm font-medium">Your Location:</span>
-            <span className="text-sm text-gray-600 truncate">
+            <span className="text-sm text-black truncate">
               {currentPosition ? 
                 `GPS: ${currentPosition.coords.latitude.toFixed(4)}, ${currentPosition.coords.longitude.toFixed(4)}` :
                 clientLocation.address
@@ -505,7 +505,7 @@ const TrackingMap = ({
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-red-600 rounded-full"></div>
               <span className="text-sm font-medium">Technician:</span>
-              <span className="text-sm text-gray-600">{technicianLocation.name}</span>
+              <span className="text-sm text-black">{technicianLocation.name}</span>
             </div>
           )}
         </div>

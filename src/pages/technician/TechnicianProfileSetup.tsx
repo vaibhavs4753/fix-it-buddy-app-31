@@ -129,11 +129,11 @@ const TechnicianProfileSetup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg slide-in">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Set Up Your Technician Profile</h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-black">
             Tell clients about your services
           </p>
           
@@ -157,8 +157,8 @@ const TechnicianProfileSetup = () => {
                   className="w-24 h-24 rounded-full object-cover border-2 border-primary"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User size={40} className="text-gray-400" />
+                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center">
+                  <User size={40} className="text-black" />
                 </div>
               )}
               
@@ -179,7 +179,7 @@ const TechnicianProfileSetup = () => {
                 onChange={handleImageUpload}
               />
             </div>
-            <p className="text-sm text-gray-500">Add a profile picture</p>
+            <p className="text-sm text-black">Add a profile picture</p>
           </div>
 
           <div className="space-y-4">

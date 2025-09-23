@@ -215,11 +215,11 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   }, [watchId]);
 
   return (
-    <Card className={`${tracking ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+    <Card className={`${tracking ? 'border-green-200 bg-green-50' : 'border-black'}`}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Navigation className={`h-5 w-5 ${tracking ? 'text-green-600' : 'text-gray-400'}`} />
+            <Navigation className={`h-5 w-5 ${tracking ? 'text-green-600' : 'text-black'}`} />
             <span>Location Sharing</span>
           </div>
           <Badge 
@@ -241,7 +241,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-black">
           {!permissionRequested ? (
             <p>Requesting location permission...</p>
           ) : !permissionGranted ? (
@@ -256,14 +256,14 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
         {currentLocation && (
           <div className="space-y-2">
             <div className="flex items-center space-x-2 text-sm">
-              <MapPin className="h-4 w-4 text-gray-500" />
+              <MapPin className="h-4 w-4 text-black" />
               <span className="font-mono">
                 {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
               </span>
             </div>
             
             {lastUpdate && (
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-black">
                 <Clock className="h-4 w-4" />
                 <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
               </div>

@@ -105,43 +105,43 @@ const ServiceDetails = () => {
               </div>
               <div>
                 <h2 className="font-semibold text-lg capitalize">{currentRequest.serviceType} Service</h2>
-                <p className="text-sm text-gray-500">{formatDate(new Date(currentRequest.createdAt))}</p>
+                <p className="text-sm text-black">{formatDate(new Date(currentRequest.createdAt))}</p>
               </div>
             </div>
             
-            <div className="border-t border-gray-100 py-4">
+            <div className="border-t border-black py-4">
               <h3 className="font-medium mb-2">Service Location</h3>
-              <p className="text-gray-700">{currentRequest.location.address}</p>
+              <p className="text-black">{currentRequest.location.address}</p>
             </div>
             
-            <div className="border-t border-gray-100 py-4">
+            <div className="border-t border-black py-4">
               <h3 className="font-medium mb-2">Description</h3>
-              <p className="text-gray-700">{currentRequest.description}</p>
+              <p className="text-black">{currentRequest.description}</p>
             </div>
             
             {currentRequest.mediaUrls.length > 0 && (
-              <div className="border-t border-gray-100 py-4">
+              <div className="border-t border-black py-4">
                 <h3 className="font-medium mb-2">Media</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentRequest.mediaUrls.map((url, index) => (
                     <div key={index} className="relative">
                       {currentRequest.mediaType === 'image' && (
-                        <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
                       )}
                       {currentRequest.mediaType === 'video' && (
-                        <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </div>
                       )}
                       {currentRequest.mediaType === 'audio' && (
-                        <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                           </svg>
                         </div>
@@ -152,9 +152,9 @@ const ServiceDetails = () => {
               </div>
             )}
             
-            <div className="border-t border-gray-100 py-4">
+            <div className="border-t border-black py-4">
               <h3 className="font-medium mb-2">Visit Required</h3>
-              <p className="text-gray-700">{currentRequest.isVisitRequired ? 'Yes' : 'No'}</p>
+              <p className="text-black">{currentRequest.isVisitRequired ? 'Yes' : 'No'}</p>
             </div>
           </div>
           
@@ -180,7 +180,7 @@ const ServiceDetails = () => {
             {showCompleteForm ? (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="text-lg font-medium mb-4">Complete Service</h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-black mb-4">
                   Ask the client for their personal ID to complete the service
                 </p>
                 

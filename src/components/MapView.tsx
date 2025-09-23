@@ -25,7 +25,7 @@ const MapView = ({ origin, destination, className }: MapViewProps) => {
     if (!ctx) return;
     
     // Draw map background
-    ctx.fillStyle = '#e6f2ff';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw some "roads"
@@ -53,7 +53,7 @@ const MapView = ({ origin, destination, className }: MapViewProps) => {
       const originX = canvas.width / 2 - 50;
       const originY = canvas.height / 2 + 50;
       
-      ctx.fillStyle = '#4285F4';
+      ctx.fillStyle = '#000000';
       ctx.beginPath();
       ctx.arc(originX, originY, 10, 0, 2 * Math.PI);
       ctx.fill();
@@ -64,7 +64,7 @@ const MapView = ({ origin, destination, className }: MapViewProps) => {
       const destX = canvas.width / 2 + 50;
       const destY = canvas.height / 2 - 50;
       
-      ctx.fillStyle = '#EA4335';
+      ctx.fillStyle = '#000000';
       ctx.beginPath();
       ctx.arc(destX, destY, 10, 0, 2 * Math.PI);
       ctx.fill();
@@ -74,7 +74,7 @@ const MapView = ({ origin, destination, className }: MapViewProps) => {
         const originX = canvas.width / 2 - 50;
         const originY = canvas.height / 2 + 50;
         
-        ctx.strokeStyle = '#4285F4';
+        ctx.strokeStyle = '#000000';
         ctx.lineWidth = 3;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
@@ -107,10 +107,10 @@ const MapView = ({ origin, destination, className }: MapViewProps) => {
   return (
     <div 
       ref={mapRef} 
-      className={`w-full h-64 bg-gray-100 rounded-lg shadow ${className || ''}`}
+      className={`w-full h-64 bg-white rounded-lg shadow ${className || ''}`}
     >
       <div className="w-full h-full flex items-center justify-center">
-        <p className="text-gray-500">Loading map...</p>
+        <p className="text-black">Loading map...</p>
       </div>
     </div>
   );

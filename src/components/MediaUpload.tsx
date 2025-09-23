@@ -61,7 +61,7 @@ const MediaUpload = ({ onMediaUpload, className }: MediaUploadProps) => {
               <video src={url} className="w-20 h-20 object-cover rounded" controls />
             )}
             {activeType === 'audio' && (
-              <div className="w-20 h-20 flex items-center justify-center bg-gray-200 rounded">
+              <div className="w-20 h-20 flex items-center justify-center bg-white rounded">
                 <AudioLines size={24} />
               </div>
             )}
@@ -124,11 +124,11 @@ const MediaUpload = ({ onMediaUpload, className }: MediaUploadProps) => {
             multiple
           />
           <label htmlFor="media-upload">
-            <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-center">
+            <div className="border-2 border-dashed border-black p-4 rounded-lg cursor-pointer hover:bg-white text-center">
               <p>
                 Click to upload {activeType === 'image' ? 'photos' : activeType === 'video' ? 'videos' : 'audio recordings'}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-black">
                 {activeType === 'image' ? 'PNG, JPG, GIF' : activeType === 'video' ? 'MP4, WebM, Ogg' : 'MP3, WAV, Ogg'} files are supported
               </p>
             </div>

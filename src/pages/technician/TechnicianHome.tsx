@@ -76,7 +76,7 @@ const TechnicianHome = () => {
               <span className="mr-2 text-sm">Status:</span>
               <button
                 onClick={() => setIsOnline(!isOnline)}
-                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isOnline ? 'bg-green-500' : 'bg-black'}`}
               >
                 <span
                   className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${isOnline ? 'translate-x-6' : 'translate-x-1'}`}
@@ -109,7 +109,7 @@ const TechnicianHome = () => {
               
               <div>
                 <h2 className="text-lg font-medium">Welcome, {user?.name || 'Technician'}</h2>
-                <p className="text-gray-700">Your service type: <span className="font-medium capitalize">{user?.serviceType}</span></p>
+                <p className="text-black">Your service type: <span className="font-medium capitalize">{user?.serviceType}</span></p>
                 
                 <div className="mt-2">
                   <p className="text-sm">Personal ID: <span className="font-mono">{user?.personalId || 'N/A'}</span></p>
@@ -143,13 +143,13 @@ const TechnicianHome = () => {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium mb-2">No new requests</h3>
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-black mb-4">
                     You'll be notified when new service requests come in
                   </p>
                   <Button 
@@ -169,7 +169,7 @@ const TechnicianHome = () => {
               
               <div className="mt-8 bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-lg font-medium mb-2">Tips for Better Service</h2>
-                <ul className="text-gray-700 space-y-2">
+                <ul className="text-black space-y-2">
                   <li className="flex items-start">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -193,13 +193,13 @@ const TechnicianHome = () => {
             </>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <h3 className="text-lg font-medium mb-2">You're currently offline</h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-black mb-4">
                 Toggle your status to online to receive new service requests
               </p>
               <Button onClick={() => setIsOnline(true)}>

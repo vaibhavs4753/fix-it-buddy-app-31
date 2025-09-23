@@ -1,73 +1,96 @@
-# Welcome to your Lovable project
+# Service Marketplace
 
-## Project info
+A modern React application for connecting clients with technicians. This service marketplace allows clients to book various services and enables technicians to manage their service offerings and appointments.
 
-**URL**: https://lovable.dev/projects/8867ec88-8594-4702-8d70-6503cca2cc17
+## Features
 
-## How can I edit this code?
+### For Clients
+- Browse and book various services
+- Real-time tracking of technician location
+- Secure payment processing
+- Service request management
+- Profile management
 
-There are several ways of editing your application.
+### for Technicians
+- Service offering management
+- Request handling and scheduling
+- Location tracking for clients
+- Profile and availability management
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/8867ec88-8594-4702-8d70-6503cca2cc17) and start prompting.
+- **Frontend**: React + TypeScript + Vite
+- **UI Framework**: Tailwind CSS + shadcn/ui components
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
+- **State Management**: TanStack React Query + Context API
+- **Routing**: React Router DOM
+- **Maps**: Mapbox GL for location tracking
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
+- Node.js 20+ or Bun
+- A Supabase account and project
+- Mapbox account for map features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   bun install
+   ```
 
-Follow these steps:
+3. Set up your environment variables:
+   - Supabase URL and anon key (configured in `src/integrations/supabase/client.ts`)
+   - Mapbox API key (for map functionality)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The application will be available at `http://localhost:5000`
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Project Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+- `/src/components/` - Reusable UI components
+- `/src/pages/` - Page components organized by user type (client/technician)
+- `/src/context/` - React context providers for auth and services
+- `/src/integrations/supabase/` - Supabase client and type definitions
+- `/src/hooks/` - Custom React hooks
+- `/supabase/` - Database migrations and functions
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The application is configured for deployment on various platforms:
 
-**Use GitHub Codespaces**
+- **Build**: `npm run build`
+- **Preview**: `npm run preview`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The build outputs to the `dist/` directory and can be served statically.
 
-## What technologies are used for this project?
+## Database Schema
 
-This project is built with:
+The application uses Supabase with the following main tables:
+- Users (clients and technicians)
+- Services
+- Service requests
+- Profiles
+- Location tracking
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+See `/supabase/migrations/` for detailed schema definitions.
 
-## How can I deploy this project?
+## Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/8867ec88-8594-4702-8d70-6503cca2cc17) and click on Share -> Publish.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## Can I connect a custom domain to my Lovable project?
+## License
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is open source and available under the MIT License.

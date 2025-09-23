@@ -33,6 +33,8 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
   const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(null);
   const [onlineTechnicians, setOnlineTechnicians] = useState<string[]>([]);
   const { toast } = useToast();
+  
+  // Use auth context directly for proper reactivity
   const { user } = useAuth();
 
   // Load service requests and technicians, setup realtime
@@ -40,7 +42,8 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       refreshRequests();
       loadTechnicians();
-      setupRealtimeSubscriptions();
+      const cleanup = setupRealtimeSubscriptions();
+      return cleanup;
     }
   }, [user]);
 

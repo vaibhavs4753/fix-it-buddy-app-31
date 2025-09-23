@@ -38,66 +38,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return role === 'customer' ? 'client' : role as UserType;
     };
     
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
-        
         if (!isMounted) return;
         
         setSession(session);
         if (session?.user) {
-          // Defer profile fetch to avoid blocking the auth callback
-          setTimeout(async () => {
-            if (!isMounted) return;
+          try {
+            // Fetch user profile from profiles table
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle();
             
-            try {
-              // Fetch user profile from profiles table
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .maybeSingle();
-              
-              console.log('Profile fetch result:', { profile, profileError });
-              
-              if (profile && !profileError) {
-                // Get technician service type if user is a technician
-                let serviceType: ServiceType | undefined = undefined;
-                if (profile.active_role === 'technician') {
-                  const { data: techProfile } = await supabase
-                    .from('technician_profiles')
-                    .select('service_type')
-                    .eq('user_id', session.user.id)
-                    .maybeSingle();
-                  serviceType = techProfile?.service_type as ServiceType;
-                }
-
-                const appUser: User = {
-                  id: session.user.id,
-                  name: profile.name || session.user.email || '',
-                  phone: profile.phone || '',
-                  type: mapRoleToUserType(profile.active_role || profile.role),
-                  serviceType,
-                };
-                setUser(appUser);
-                setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
-              } else {
-                // Fallback to metadata if profile doesn't exist
-                const userType = session.user.user_metadata?.userType as UserType || 'client';
-                const appUser: User = {
-                  id: session.user.id,
-                  name: session.user.user_metadata?.name || session.user.email || '',
-                  phone: session.user.phone || '',
-                  type: userType,
-                  serviceType: session.user.user_metadata?.serviceType as ServiceType,
-                };
-                setUser(appUser);
-                setAvailableRoles([userType]);
+            if (profile && !profileError) {
+              // Get technician service type if user is a technician
+              let serviceType: ServiceType | undefined = undefined;
+              if (profile.active_role === 'technician') {
+                const { data: techProfile } = await supabase
+                  .from('technician_profiles')
+                  .select('service_type')
+                  .eq('user_id', session.user.id)
+                  .maybeSingle();
+                serviceType = techProfile?.service_type as ServiceType;
               }
-            } catch (error) {
-              console.error('Error fetching profile:', error);
-              // Fallback to metadata
+
+              const appUser: User = {
+                id: session.user.id,
+                name: profile.name || session.user.email || '',
+                phone: profile.phone || '',
+                type: mapRoleToUserType(profile.active_role || profile.role),
+                serviceType,
+              };
+              setUser(appUser);
+              setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
+            } else {
+              // Fallback to metadata if profile doesn't exist
               const userType = session.user.user_metadata?.userType as UserType || 'client';
               const appUser: User = {
                 id: session.user.id,
@@ -109,7 +87,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setUser(appUser);
               setAvailableRoles([userType]);
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            // Fallback to metadata
+            const userType = session.user.user_metadata?.userType as UserType || 'client';
+            const appUser: User = {
+              id: session.user.id,
+              name: session.user.user_metadata?.name || session.user.email || '',
+              phone: session.user.phone || '',
+              type: userType,
+              serviceType: session.user.user_metadata?.serviceType as ServiceType,
+            };
+            setUser(appUser);
+            setAvailableRoles([userType]);
+          }
         } else {
           setUser(null);
           setAvailableRoles([]);
@@ -118,27 +109,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session with proper error handling
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.log('Session error (clearing):', error.message);
-        // Clear any invalid session data
-        setSession(null);
-        setUser(null);
-        if (isMounted) setIsLoading(false);
-        return;
-      }
-      
-      if (session && isMounted) {
-        // Session will be handled by the listener above
-      } else if (isMounted) {
+    // Get initial session once
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (isMounted && !session) {
         setIsLoading(false);
       }
-    }).catch((error) => {
-      console.log('Session fetch error:', error);
+    }).catch(() => {
       if (isMounted) {
-        setSession(null);
-        setUser(null);
         setIsLoading(false);
       }
     });

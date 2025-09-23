@@ -23,35 +23,27 @@ const Auth = ({ userType }: AuthProps) => {
     confirmPassword: '',
   });
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated when auth state is stable
   useEffect(() => {
-    console.log('Auth redirect check:', { isAuthenticated, user, authLoading });
-    
     if (isAuthenticated && user && !authLoading) {
-      console.log('User authenticated, redirecting...', user);
       // Use the user's actual active role, not the userType prop
       if (user.type === 'client') {
-        console.log('Redirecting to client home');
         navigate('/client/home');
       } else if (user.type === 'technician') {
-        console.log('Redirecting to technician home');
         navigate('/technician/home');
       } else {
         // If no specific type is set, redirect to profile setup
         if (userType === 'client') {
-          console.log('Redirecting to client profile setup');
           navigate('/client/profile-setup');
         } else {
-          console.log('Redirecting to technician service selection');
           navigate('/technician/service-selection');
         }
       }
     }
-  }, [isAuthenticated, user, navigate, userType, authLoading]);
+  }, [isAuthenticated, user, authLoading, navigate, userType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted', { isSignUp, isForgotPassword, email: formData.email, userType });
     
     if (isLoading) return; // Prevent multiple submissions
     
@@ -84,7 +76,6 @@ const Auth = ({ userType }: AuthProps) => {
           setIsForgotPassword(false);
         }
       } catch (error) {
-        console.error('Reset password error:', error);
         toast({
           title: "Error",
           description: "Something went wrong. Please try again.",
@@ -115,17 +106,13 @@ const Auth = ({ userType }: AuthProps) => {
     }
 
     setIsLoading(true);
-    console.log('Starting authentication...');
     
     try {
       const result = isSignUp 
         ? await signUp(formData.email, formData.password, userType)
         : await signIn(formData.email, formData.password);
-
-      console.log('Auth result:', result);
       
       if (result.error) {
-        console.error('Auth error:', result.error);
         let errorTitle = "Authentication Error";
         let errorDescription = result.error.message || "Something went wrong";
         
@@ -158,13 +145,11 @@ const Auth = ({ userType }: AuthProps) => {
           variant: "destructive",
         });
       } else if (isSignUp) {
-        console.log('Sign up successful');
         toast({
           title: "Sign up successful",
           description: "Please check your email for verification",
         });
       } else {
-        console.log('Sign in successful');
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully",
@@ -172,7 +157,6 @@ const Auth = ({ userType }: AuthProps) => {
         // Success - the useEffect will handle redirection
       }
     } catch (error) {
-      console.error('Auth catch error:', error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -180,7 +164,6 @@ const Auth = ({ userType }: AuthProps) => {
       });
     } finally {
       setIsLoading(false);
-      console.log('Auth process completed');
     }
   };
 

@@ -1,15 +1,6 @@
 <svg width="300" height="400" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="outline" x="-50%" y="-50%" width="200%" height="200%">
-      <feFlood flood-color="white" result="white"/>
-      <feComposite in="white" in2="SourceGraphic" operator="in" result="filled"/>
-      <feMorphology in="filled" operator="dilate" radius="2" result="expanded"/>
-      <feComposite in="expanded" in2="filled" operator="out" result="outline"/>
-    </filter>
-  </defs>
-  
   <!-- Simplified electrician silhouette -->
-  <g fill="white" opacity="0.2" filter="url(#outline)">
+  <g fill="white" stroke="white" stroke-width="1" opacity="0.4">
     <!-- Head -->
     <circle cx="150" cy="80" r="25"/>
     <!-- Hard hat -->

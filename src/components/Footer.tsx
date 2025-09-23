@@ -49,11 +49,11 @@ const Footer = () => {
           </p>
           
           {user?.type === 'technician' ? (
-            <Link to="/technician/home" className="text-blue-600 hover:underline text-sm">
+            <Link to="/technician/home" className="text-black hover:underline text-sm">
               Technician Dashboard
             </Link>
           ) : (
-            <Link to="/client/home" className="text-blue-600 hover:underline text-sm">
+            <Link to="/client/home" className="text-black hover:underline text-sm">
               Client Dashboard
             </Link>
           )}

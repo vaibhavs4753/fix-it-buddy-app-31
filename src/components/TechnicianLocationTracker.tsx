@@ -215,16 +215,16 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
   }, [watchId]);
 
   return (
-    <Card className={`${tracking ? 'border-green-200 bg-green-50' : 'border-black'}`}>
+    <Card className={`${tracking ? 'border-black bg-white' : 'border-black'}`}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Navigation className={`h-5 w-5 ${tracking ? 'text-green-600' : 'text-black'}`} />
+            <Navigation className={`h-5 w-5 ${tracking ? 'text-black' : 'text-black'}`} />
             <span>Location Sharing</span>
           </div>
           <Badge 
             variant={tracking ? "default" : "secondary"}
-            className={tracking ? "bg-green-600" : ""}
+            className={tracking ? "bg-black" : ""}
           >
             {tracking ? (
               <div className="flex items-center space-x-1">
@@ -270,7 +270,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
             )}
 
             {accuracy && accuracy < 50 && (
-              <div className="text-xs text-green-600">
+              <div className="text-xs text-black">
                 📍 High accuracy: ±{Math.round(accuracy)}m
               </div>
             )}
@@ -280,7 +280,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
         {!permissionGranted && permissionRequested && (
           <Button
             onClick={requestLocationPermission}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-black hover:bg-black"
           >
             <Navigation className="h-4 w-4 mr-2" />
             Grant Location Permission
@@ -293,7 +293,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
             {!currentSession ? (
               <Button
                 onClick={handleToggleTracking}
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-black hover:bg-black"
                 disabled={!clientId}
               >
                 <Play className="h-4 w-4 mr-2" />
@@ -301,16 +301,16 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
               </Button>
             ) : (
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg">
                   <div>
-                    <p className="text-sm font-medium text-green-800">
+                    <p className="text-sm font-medium text-black">
                       Service Session Active
                     </p>
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-black">
                       Status: {currentSession.status}
                     </p>
                   </div>
-                  <Badge className="bg-green-600">
+                  <Badge className="bg-black">
                     Live
                   </Badge>
                 </div>
@@ -352,7 +352,7 @@ const TechnicianLocationTracker: React.FC<TechnicianLocationTrackerProps> = ({
         )}
 
         {tracking && !serviceRequestId && (
-          <div className="text-xs text-center text-green-600 font-medium">
+          <div className="text-xs text-center text-black font-medium">
             ✓ Location sharing is active and automatic
           </div>
         )}

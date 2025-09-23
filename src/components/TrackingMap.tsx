@@ -444,8 +444,8 @@ const TrackingMap = ({
       
       {/* GPS Status */}
       {currentPosition && (
-        <div className="absolute top-16 right-4 bg-green-50 border border-green-200 rounded-lg p-2">
-          <div className="text-xs text-green-700">
+        <div className="absolute top-16 right-4 bg-white border border-black rounded-lg p-2">
+          <div className="text-xs text-black">
             <div className="font-medium">GPS Active</div>
             <div>Accuracy: ±{Math.round(currentPosition.coords.accuracy || 0)}m</div>
           </div>
@@ -456,13 +456,13 @@ const TrackingMap = ({
       {showRoute && technicianLocation && (
         <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border">
           <div className="flex items-center space-x-2 mb-3">
-            <Navigation className="h-5 w-5 text-blue-600" />
+            <Navigation className="h-5 w-5 text-black" />
             <span className="font-semibold text-black">Live Tracking</span>
           </div>
           
           {isCalculating ? (
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
               <span className="text-sm text-black">Calculating route...</span>
             </div>
           ) : routeInfo ? (
@@ -472,7 +472,7 @@ const TrackingMap = ({
                   <MapPin className="h-4 w-4 text-black" />
                   <span className="text-sm font-medium">Distance:</span>
                 </div>
-                <span className="text-sm font-bold text-blue-600">{routeInfo.distance}</span>
+                <span className="text-sm font-bold text-black">{routeInfo.distance}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -480,7 +480,7 @@ const TrackingMap = ({
                   <Clock className="h-4 w-4 text-black" />
                   <span className="text-sm font-medium">ETA:</span>
                 </div>
-                <span className="text-sm font-bold text-green-600">{routeInfo.duration}</span>
+                <span className="text-sm font-bold text-black">{routeInfo.duration}</span>
               </div>
             </div>
           ) : null}
@@ -491,7 +491,7 @@ const TrackingMap = ({
       <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-3 border">
         <div className="grid grid-cols-1 gap-2">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div className="w-3 h-3 bg-black rounded-full"></div>
             <span className="text-sm font-medium">Your Location:</span>
             <span className="text-sm text-black truncate">
               {currentPosition ? 

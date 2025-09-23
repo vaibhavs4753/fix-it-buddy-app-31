@@ -25,9 +25,9 @@ const ServiceTypeCard = ({ serviceType, onClick, className, linkTo }: ServiceTyp
   }[serviceType];
 
   const bgColor = {
-    'electrician': 'bg-blue-100 hover:bg-blue-200',
-    'mechanic': 'bg-orange-100 hover:bg-orange-200',
-    'plumber': 'bg-green-100 hover:bg-green-200',
+    'electrician': 'bg-white hover:bg-white',
+    'mechanic': 'bg-white hover:bg-white',
+    'plumber': 'bg-white hover:bg-white',
   }[serviceType];
 
   const card = (
@@ -45,7 +45,7 @@ const ServiceTypeCard = ({ serviceType, onClick, className, linkTo }: ServiceTyp
         </div>
         <h3 className="text-xl font-bold">{title}</h3>
       </div>
-      <p className="text-gray-700">{description}</p>
+      <p className="text-black">{description}</p>
     </div>
   );
 

@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { ServiceRequest, Technician } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+
+// Declare global Google Maps types
+declare global {
+  interface Window {
+    google: any;
+    initGoogleMap: () => void;
+  }
+}
 
 interface LiveTrackingMapProps {
   serviceRequest: ServiceRequest;
@@ -16,104 +22,151 @@ const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
   onLocationUpdate 
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const clientMarker = useRef<mapboxgl.Marker | null>(null);
-  const technicianMarker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const map = useRef<any>(null);
+  const clientMarker = useRef<any>(null);
+  const technicianMarker = useRef<any>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string>('');
 
-  // Get Mapbox token from Supabase secrets
+  // Load Google Maps API
   useEffect(() => {
-    const getMapboxToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (data?.token) {
-          setMapboxToken(data.token);
-        }
-      } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
-        // Fallback - use a placeholder or prompt user
-        setMapboxToken('pk.eyJ1IjoidGVzdCIsImEiOiJjbGV0ZXN0In0.test'); // Replace with actual token
+    const loadGoogleMaps = () => {
+      if (window.google && window.google.maps) {
+        setIsMapLoaded(true);
+        return;
       }
+
+      // Create script element for Google Maps
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      
+      // Check if script already exists
+      if (document.getElementById('google-maps-script')) {
+        setIsMapLoaded(true);
+        return;
+      }
+      
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        setIsMapLoaded(true);
+      };
+      
+      script.onerror = () => {
+        setMapError('Failed to load Google Maps. Please check your API key.');
+      };
+
+      document.head.appendChild(script);
     };
-    getMapboxToken();
+
+    loadGoogleMaps();
   }, []);
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || !serviceRequest.location) return;
+    if (!mapContainer.current || !isMapLoaded || !serviceRequest.location) return;
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [serviceRequest.location.lng, serviceRequest.location.lat],
-      zoom: 14,
-    });
+    try {
+      map.current = new window.google.maps.Map(mapContainer.current, {
+        center: { lat: serviceRequest.location.lat, lng: serviceRequest.location.lng },
+        zoom: 14,
+        styles: [
+          {
+            "featureType": "all",
+            "elementType": "all",
+            "stylers": [
+              { "saturation": -100 },
+              { "lightness": 50 }
+            ]
+          }
+        ],
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+        zoomControl: true,
+      });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      // Add client location marker
+      clientMarker.current = new window.google.maps.Marker({
+        position: { lat: serviceRequest.location.lat, lng: serviceRequest.location.lng },
+        map: map.current,
+        title: 'Your Location',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="12" fill="#000000" stroke="#ffffff" stroke-width="3"/>
+              <text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">YOU</text>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(32, 32),
+          anchor: new window.google.maps.Point(16, 16)
+        }
+      });
 
-    // Add client location marker
-    const clientEl = document.createElement('div');
-    clientEl.className = 'client-marker';
-    clientEl.style.backgroundColor = '#000000';
-    clientEl.style.width = '20px';
-    clientEl.style.height = '20px';
-    clientEl.style.borderRadius = '50%';
-    clientEl.style.border = '3px solid white';
-    clientEl.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: '<h3>Your Location</h3><p>Service requested here</p>'
+      });
 
-    clientMarker.current = new mapboxgl.Marker(clientEl)
-      .setLngLat([serviceRequest.location.lng, serviceRequest.location.lat])
-      .setPopup(new mapboxgl.Popup().setHTML('<h3>Your Location</h3><p>Service requested here</p>'))
-      .addTo(map.current);
+      clientMarker.current.addListener('click', () => {
+        infoWindow.open(map.current, clientMarker.current);
+      });
 
-    return () => {
-      map.current?.remove();
-    };
-  }, [mapboxToken, serviceRequest.location]);
+    } catch (error) {
+      console.error('Error initializing Google Maps:', error);
+      setMapError('Failed to initialize map');
+    }
+  }, [isMapLoaded, serviceRequest.location]);
 
   // Update technician marker
   useEffect(() => {
-    if (!map.current || !technician?.location) return;
+    if (!map.current || !technician?.location || !isMapLoaded) return;
 
-    if (technicianMarker.current) {
-      technicianMarker.current.remove();
-    }
+    try {
+      if (technicianMarker.current) {
+        technicianMarker.current.setMap(null);
+      }
 
-    const techEl = document.createElement('div');
-    techEl.className = 'technician-marker';
-    techEl.style.backgroundColor = '#000000';
-    techEl.style.width = '24px';
-    techEl.style.height = '24px';
-    techEl.style.borderRadius = '50%';
-    techEl.style.border = '3px solid white';
-    techEl.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-    techEl.style.display = 'flex';
-    techEl.style.alignItems = 'center';
-    techEl.style.justifyContent = 'center';
-    techEl.innerHTML = '🔧';
-
-    technicianMarker.current = new mapboxgl.Marker(techEl)
-      .setLngLat([technician.location.lng, technician.location.lat])
-      .setPopup(new mapboxgl.Popup().setText(`${technician.name} - ${technician.serviceType} • ⭐ ${technician.rating}`))
-      .addTo(map.current);
-
-    // Fit map to show both markers
-    if (serviceRequest.location) {
-      const bounds = new mapboxgl.LngLatBounds();
-      bounds.extend([serviceRequest.location.lng, serviceRequest.location.lat]);
-      bounds.extend([technician.location.lng, technician.location.lat]);
-      
-      map.current.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 16
+      technicianMarker.current = new window.google.maps.Marker({
+        position: { lat: technician.location.lat, lng: technician.location.lng },
+        map: map.current,
+        title: `${technician.name} - ${technician.serviceType}`,
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="12" fill="#000000" stroke="#ffffff" stroke-width="3"/>
+              <text x="16" y="20" text-anchor="middle" fill="white" font-size="8" font-weight="bold">TECH</text>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(32, 32),
+          anchor: new window.google.maps.Point(16, 16)
+        }
       });
-    }
 
-    onLocationUpdate?.(technician.location);
-  }, [technician, serviceRequest.location, onLocationUpdate]);
+      const techInfoWindow = new window.google.maps.InfoWindow({
+        content: `<div><strong>${technician.name}</strong><br/>${technician.serviceType} • ⭐ ${technician.rating}</div>`
+      });
+
+      technicianMarker.current.addListener('click', () => {
+        techInfoWindow.open(map.current, technicianMarker.current);
+      });
+
+      // Fit map to show both markers
+      if (serviceRequest.location) {
+        const bounds = new window.google.maps.LatLngBounds();
+        bounds.extend({ lat: serviceRequest.location.lat, lng: serviceRequest.location.lng });
+        bounds.extend({ lat: technician.location.lat, lng: technician.location.lng });
+        
+        map.current.fitBounds(bounds, { padding: 50 });
+      }
+
+      onLocationUpdate?.(technician.location);
+    } catch (error) {
+      console.error('Error updating technician marker:', error);
+    }
+  }, [technician, serviceRequest.location, onLocationUpdate, isMapLoaded]);
 
   // Real-time location updates
   useEffect(() => {
@@ -138,8 +191,8 @@ const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
             };
 
             // Update marker position
-            if (technicianMarker.current) {
-              technicianMarker.current.setLngLat([newLocation.lng, newLocation.lat]);
+            if (technicianMarker.current && isMapLoaded) {
+              technicianMarker.current.setPosition(newLocation);
             }
 
             onLocationUpdate?.(newLocation);
@@ -151,22 +204,43 @@ const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [technician?.id, onLocationUpdate]);
+  }, [technician?.id, onLocationUpdate, isMapLoaded]);
+
+  if (mapError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-white border rounded-lg">
+        <div className="text-center p-4">
+          <p className="text-black mb-2">⚠️ Map Error</p>
+          <p className="text-sm text-black">{mapError}</p>
+          <p className="text-xs text-black mt-2">Please configure your Google Maps API key</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
       
-      {!technician && (
+      {!isMapLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white rounded-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black mx-auto mb-2"></div>
+            <p className="text-black">Loading Google Maps...</p>
+          </div>
+        </div>
+      )}
+      
+      {!technician && isMapLoaded && (
         <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg">
           <p className="text-sm text-black">🔍 Looking for nearby technicians...</p>
         </div>
       )}
       
-      {technician && (
+      {technician && isMapLoaded && (
         <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg max-w-xs">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="w-3 h-3 bg-black rounded-full animate-pulse"></div>
             <div>
               <p className="font-medium text-sm">{technician.name}</p>
               <p className="text-xs text-black">{technician.serviceType} • ⭐ {technician.rating}</p>

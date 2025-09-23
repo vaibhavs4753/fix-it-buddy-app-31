@@ -139,7 +139,7 @@ const TechnicianProfileSetup = () => {
           
           {user?.serviceType && (
             <div className="flex items-center justify-center mt-3">
-              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center">
+              <div className="bg-white text-black px-3 py-1 rounded-full flex items-center">
                 <ServiceIcon type={user.serviceType} size={18} className="mr-2" />
                 <span className="font-medium capitalize">{user.serviceType}</span>
               </div>
@@ -164,7 +164,7 @@ const TechnicianProfileSetup = () => {
               
               <label 
                 htmlFor="profile-image" 
-                className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full cursor-pointer shadow-md"
+                className="absolute bottom-0 right-0 bg-black text-white p-1 rounded-full cursor-pointer shadow-md"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />

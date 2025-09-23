@@ -78,7 +78,7 @@ const ServiceDetails = () => {
         <div className="max-w-3xl mx-auto">
           <button 
             onClick={() => navigate('/technician/home')}
-            className="flex items-center text-primary hover:underline mb-4"
+            className="flex items-center text-black hover:underline mb-4"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -100,7 +100,7 @@ const ServiceDetails = () => {
           {/* Service Information */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
-              <div className="p-2 rounded-full bg-blue-100 mr-3">
+              <div className="p-2 rounded-full bg-white mr-3">
                 <ServiceIcon type={currentRequest.serviceType} size={24} />
               </div>
               <div>

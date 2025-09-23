@@ -67,7 +67,7 @@ const MediaUpload = ({ onMediaUpload, className }: MediaUploadProps) => {
             )}
             <button
               type="button"
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+              className="absolute -top-2 -right-2 bg-black text-white rounded-full p-1"
               onClick={() => removeFile(index)}
             >
               <X size={14} />

@@ -56,7 +56,7 @@ const TechnicianHome = () => {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary">FixIt Pro</h1>
+          <h1 className="text-xl font-bold text-black">FixIt Pro</h1>
           <div className="flex items-center gap-3">
             <RoleSwitcher />
             <Button variant="outline" onClick={handleLogout}>
@@ -76,7 +76,7 @@ const TechnicianHome = () => {
               <span className="mr-2 text-sm">Status:</span>
               <button
                 onClick={() => setIsOnline(!isOnline)}
-                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isOnline ? 'bg-green-500' : 'bg-black'}`}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isOnline ? 'bg-black' : 'bg-black'}`}
               >
                 <span
                   className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${isOnline ? 'translate-x-6' : 'translate-x-1'}`}
@@ -89,7 +89,7 @@ const TechnicianHome = () => {
           </div>
           
           {/* Welcome Card */}
-          <div className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-lg p-6 mb-8">
+          <div className="bg-gradient-to-r from-white to-white rounded-lg p-6 mb-8">
             <div className="flex items-start">
               <div className="mr-4">
                 {user?.profileImage ? (
@@ -100,7 +100,7 @@ const TechnicianHome = () => {
                   />
                 ) : (
                   <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -171,19 +171,19 @@ const TechnicianHome = () => {
                 <h2 className="text-lg font-medium mb-2">Tips for Better Service</h2>
                 <ul className="text-black space-y-2">
                   <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Always confirm your arrival time with clients
                   </li>
                   <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Keep your tools and equipment ready at all times
                   </li>
                   <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-black mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Check service details thoroughly before accepting

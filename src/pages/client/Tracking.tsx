@@ -6,6 +6,7 @@ import { MapPin, Clock, User, Star, Phone, Navigation, CheckCircle } from 'lucid
 import { useService } from '@/context/ServiceContext';
 import { useAuth } from '@/context/AuthContext';
 import LiveTrackingMap from '@/components/LiveTrackingMap';
+import TechnicianSearchProgress from '@/components/TechnicianSearchProgress';
 import { ServiceRequest, Technician } from '@/types';
 import Footer from '@/components/Footer';
 import { useServiceSession } from '@/hooks/useServiceSession';
@@ -26,6 +27,8 @@ const Tracking = () => {
   const [activeRequests, setActiveRequests] = useState<ServiceRequest[]>([]);
   const [assignedTechnicians, setAssignedTechnicians] = useState<{ [key: string]: Technician }>({});
   const [technicianLocations, setTechnicianLocations] = useState<{ [key: string]: { lat: number; lng: number } }>({});
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchingRequests, setSearchingRequests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {

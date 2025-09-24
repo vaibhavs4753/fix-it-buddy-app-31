@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ServiceType } from '@/types';
 import MediaUpload from '@/components/MediaUpload';
 import TrackingMap from '@/components/TrackingMap';
+import TechnicianSearchProgress from '@/components/TechnicianSearchProgress';
 import Footer from '@/components/Footer';
 
 const ServiceBooking = () => {
@@ -27,7 +28,8 @@ const ServiceBooking = () => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | 'none'>('none');
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'details' | 'location'>('details');
+  const [step, setStep] = useState<'details' | 'location' | 'searching'>('details');
+  const [searchError, setSearchError] = useState<string>('');
   
   const handleMediaUpload = (files: File[], type: 'image' | 'video' | 'audio') => {
     setMediaFiles(files);
@@ -84,6 +86,7 @@ const ServiceBooking = () => {
     }
     
     setIsLoading(true);
+    setSearchError('');
     
     try {
       const mediaUrls = mediaFiles.length > 0 
@@ -105,12 +108,7 @@ const ServiceBooking = () => {
       });
       
       setCurrentRequest(serviceRequest);
-      
-      // Auto-assign nearest technician based on location and service type
-      toast({
-        title: "Finding Technician",
-        description: `Searching for available ${serviceType}s nearby...`,
-      });
+      setStep('searching');
       
       // Use real auto-assignment with service type filtering
       const assigned = await autoAssignTechnician(
@@ -120,17 +118,19 @@ const ServiceBooking = () => {
       );
       
       if (assigned) {
-        navigate('/client/tracking');
-      } else {
-        // If no immediate assignment, still navigate to tracking
         toast({
-          title: "Request Created",
-          description: "Your request has been created. We'll notify you when a technician is available.",
+          title: "Technician Assigned!",
+          description: "A technician has been found and is on the way.",
         });
-        navigate('/client/tracking');
+        setTimeout(() => {
+          navigate('/client/tracking');
+        }, 2000);
+      } else {
+        setSearchError("No technicians available in your area right now. Please try again later.");
       }
       
     } catch (error) {
+      setSearchError("Failed to create service request. Please try again.");
       toast({
         title: "Error",
         description: "Failed to create service request. Please try again.",
@@ -158,7 +158,12 @@ const ServiceBooking = () => {
           </button>
           
           <h1 className="text-2xl font-bold mb-6">
-            {step === 'details' ? `Book a ${formattedServiceType} Service` : 'Select Service Location'}
+            {step === 'details' 
+              ? `Book a ${formattedServiceType} Service` 
+              : step === 'location' 
+                ? 'Select Service Location'
+                : `Finding ${formattedServiceType} Technician`
+            }
           </h1>
 
           {step === 'details' && (
@@ -204,6 +209,40 @@ const ServiceBooking = () => {
                 Continue to Location Selection
               </Button>
             </form>
+          )}
+
+          {step === 'searching' && (
+            <div className="space-y-6">
+              <TechnicianSearchProgress
+                isSearching={isLoading}
+                serviceType={serviceType as ServiceType}
+                location={selectedLocation ? {
+                  lat: selectedLocation.lat,
+                  lng: selectedLocation.lng,
+                  address: address
+                } : undefined}
+                searchError={searchError}
+                onAutoAssign={() => {
+                  setStep('location');
+                  setSearchError('');
+                }}
+              />
+              
+              {searchError && (
+                <div className="text-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setStep('location');
+                      setSearchError('');
+                    }}
+                    className="mt-4"
+                  >
+                    Back to Location Selection
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
 
           {step === 'location' && (

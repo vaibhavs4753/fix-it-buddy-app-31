@@ -18,7 +18,7 @@ const ServiceBooking = () => {
   const { serviceType } = useParams<{ serviceType: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { createServiceRequest, setCurrentRequest, autoAssignTechnician } = useService();
+  const { createServiceRequest, setCurrentRequest, autoAssignTechnician, currentRequest } = useService();
   const { toast } = useToast();
   
   const [description, setDescription] = useState('');
@@ -222,9 +222,35 @@ const ServiceBooking = () => {
                   address: address
                 } : undefined}
                 searchError={searchError}
-                onAutoAssign={() => {
-                  setStep('location');
+                onAutoAssign={async () => {
+                  if (!selectedLocation || !currentRequest) return;
+                  
+                  setIsLoading(true);
                   setSearchError('');
+                  
+                  try {
+                    const assigned = await autoAssignTechnician(
+                      currentRequest.id,
+                      selectedLocation.lat,
+                      selectedLocation.lng
+                    );
+                    
+                    if (assigned) {
+                      toast({
+                        title: "Technician Assigned!",
+                        description: "A technician has been found and is on the way.",
+                      });
+                      setTimeout(() => {
+                        navigate('/client/tracking');
+                      }, 2000);
+                    } else {
+                      setSearchError("No technicians available in your area right now. Please try again later.");
+                    }
+                  } catch (error) {
+                    setSearchError("Failed to find technician. Please try again.");
+                  } finally {
+                    setIsLoading(false);
+                  }
                 }}
               />
               

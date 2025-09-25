@@ -1,8 +1,9 @@
-
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Clock, MapPin, Navigation, Crosshair } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import LeafletMap from './LeafletMap';
+import { LatLngTuple } from 'leaflet';
 
 interface TrackingMapProps {
   clientLocation: { lat: number; lng: number; address: string };
@@ -25,7 +26,6 @@ const TrackingMap = ({
   showRoute = false,
   onLocationUpdate 
 }: TrackingMapProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<GeolocationPosition | null>(null);
@@ -51,7 +51,12 @@ const TrackingMap = ({
         setCurrentPosition(position);
         setLocationError(null);
         if (onLocationUpdate) {
-          onLocationUpdate(position.coords.latitude, position.coords.longitude);
+          onLocationUpdate(
+            position.coords.latitude, 
+            position.coords.longitude,
+            position.coords.accuracy,
+            position.coords.heading || undefined
+          );
         }
       },
       (error) => {
@@ -123,393 +128,156 @@ const TrackingMap = ({
       setIsCalculating(false);
     };
     
-    const timer = setTimeout(calculateRoute, 1000);
+    const timer = setTimeout(calculateRoute, 1500);
     return () => clearTimeout(timer);
   }, [clientLocation, technicianLocation, showRoute]);
+
+  // Prepare markers for the map
+  const markers = [];
   
-  // Enhanced Google Maps-like rendering
-  useEffect(() => {
-    if (!mapRef.current) return;
-    
-    const canvas = document.createElement('canvas');
-    const rect = mapRef.current.getBoundingClientRect();
-    canvas.width = rect.width || 800;
-    canvas.height = rect.height || 400;
-    mapRef.current.innerHTML = '';
-    mapRef.current.appendChild(canvas);
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Google Maps-like background
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#f5f5f5');
-    gradient.addColorStop(0.3, '#e8f4f8');
-    gradient.addColorStop(1, '#d6e9f0');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw realistic street grid
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    
-    // Major streets (horizontal)
-    for (let y = 60; y < canvas.height; y += 100) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
-      ctx.stroke();
-      
-      // Street outlines for depth
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 6;
-      ctx.stroke();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-    }
-    
-    // Major streets (vertical)
-    for (let x = 80; x < canvas.width; x += 120) {
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
-      
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-    }
-    
-    // Minor streets
-    ctx.strokeStyle = '#f8f8f8';
-    ctx.lineWidth = 2;
-    for (let y = 30; y < canvas.height; y += 50) {
-      if (y % 100 !== 60) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-    }
-    
-    for (let x = 40; x < canvas.width; x += 60) {
-      if (x % 120 !== 80) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-    }
-    
-    // Use GPS location if available, otherwise use provided location
-    const displayClientLat = currentPosition?.coords.latitude || clientLocation.lat;
-    const displayClientLng = currentPosition?.coords.longitude || clientLocation.lng;
-    
-    // Calculate positions with some spread for better visibility
-    const clientX = canvas.width * 0.3;
-    const clientY = canvas.height * 0.7;
-    const techX = technicianLocation ? canvas.width * 0.7 : clientX;
-    const techY = technicianLocation ? canvas.height * 0.3 : clientY;
-    
-    // Draw route with Google Maps-like styling
-    if (technicianLocation && showRoute && routeInfo) {
-      // Route shadow for depth
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.lineWidth = 8;
-      ctx.setLineDash([]);
-      
-      ctx.beginPath();
-      ctx.moveTo(clientX + 2, clientY + 2);
-      const controlX1 = clientX + (techX - clientX) * 0.3;
-      const controlY1 = clientY - 60;
-      const controlX2 = techX - (techX - clientX) * 0.3;
-      const controlY2 = techY - 60;
-      ctx.bezierCurveTo(controlX1 + 2, controlY1 + 2, controlX2 + 2, controlY2 + 2, techX + 2, techY + 2);
-      ctx.stroke();
-      
-      // Main route line
-      ctx.strokeStyle = '#4285f4';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(clientX, clientY);
-      ctx.bezierCurveTo(controlX1, controlY1, controlX2, controlY2, techX, techY);
-      ctx.stroke();
-      
-      // Route border
-      ctx.strokeStyle = '#1a73e8';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Direction arrows
-      const numArrows = 4;
-      for (let i = 1; i <= numArrows; i++) {
-        const t = i / (numArrows + 1);
-        const x = (1-t)*(1-t)*(1-t)*clientX + 3*(1-t)*(1-t)*t*controlX1 + 3*(1-t)*t*t*controlX2 + t*t*t*techX;
-        const y = (1-t)*(1-t)*(1-t)*clientY + 3*(1-t)*(1-t)*t*controlY1 + 3*(1-t)*t*t*controlY2 + t*t*t*techY;
-        
-        // Arrow direction
-        const angle = Math.atan2(techY - clientY, techX - clientX);
-        
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(-8, -4);
-        ctx.lineTo(0, 0);
-        ctx.lineTo(-8, 4);
-        ctx.lineTo(-6, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-    
-    // Enhanced location pins with Google Maps styling
-    // Client location (blue pin with accuracy circle if GPS)
-    if (currentPosition) {
-      const accuracy = currentPosition.coords.accuracy || 10;
-      const accuracyRadius = Math.min(accuracy / 5, 30);
-      
-      // Accuracy circle
-      ctx.fillStyle = 'rgba(66, 133, 244, 0.2)';
-      ctx.beginPath();
-      ctx.arc(clientX, clientY, accuracyRadius, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      ctx.strokeStyle = 'rgba(66, 133, 244, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    
-    // Client pin shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(clientX + 2, clientY + 2, 12, 8, 0, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Client pin
-    ctx.fillStyle = '#4285f4';
-    ctx.beginPath();
-    ctx.arc(clientX, clientY - 20, 15, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    ctx.fillStyle = '#1a73e8';
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#1a73e8';
-    ctx.stroke();
-    
-    // Client pin pointer
-    ctx.beginPath();
-    ctx.moveTo(clientX, clientY);
-    ctx.lineTo(clientX - 10, clientY - 20);
-    ctx.lineTo(clientX + 10, clientY - 20);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Client label
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('YOU', clientX, clientY - 15);
-    
-    // Technician location
-    if (technicianLocation) {
-      // Technician pin shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.beginPath();
-      ctx.ellipse(techX + 2, techY + 2, 12, 8, 0, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // Technician pin
-      ctx.fillStyle = '#ea4335';
-      ctx.beginPath();
-      ctx.arc(techX, techY - 20, 15, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      ctx.strokeStyle = '#d33b2c';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Technician pin pointer
-      ctx.beginPath();
-      ctx.moveTo(techX, techY);
-      ctx.lineTo(techX - 10, techY - 20);
-      ctx.lineTo(techX + 10, techY - 20);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Technician label
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 9px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('TECH', techX, techY - 16);
-    }
-    
-    // Building and landmark indicators with Google Maps styling
-    const landmarks = [
-      { x: canvas.width * 0.15, y: canvas.height * 0.3, label: 'Hospital', color: '#34a853' },
-      { x: canvas.width * 0.85, y: canvas.height * 0.7, label: 'Mall', color: '#fbbc04' },
-      { x: canvas.width * 0.5, y: canvas.height * 0.15, label: 'Park', color: '#34a853' }
-    ];
-    
-    landmarks.forEach(landmark => {
-      // Landmark shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.beginPath();
-      ctx.roundRect(landmark.x - 18, landmark.y - 6, 36, 14, 6);
-      ctx.fill();
-      
-      // Landmark background
-      ctx.fillStyle = 'white';
-      ctx.beginPath();
-      ctx.roundRect(landmark.x - 20, landmark.y - 8, 40, 16, 8);
-      ctx.fill();
-      
-      // Landmark border
-      ctx.strokeStyle = landmark.color;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Landmark text
-      ctx.fillStyle = landmark.color;
-      ctx.font = 'bold 8px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(landmark.label, landmark.x, landmark.y + 2);
+  // Add client location marker
+  markers.push({
+    position: [clientLocation.lat, clientLocation.lng] as LatLngTuple,
+    popup: `Client Location\n${clientLocation.address}`,
+    icon: 'client' as const,
+  });
+  
+  // Add technician location marker if available
+  if (technicianLocation) {
+    markers.push({
+      position: [technicianLocation.lat, technicianLocation.lng] as LatLngTuple,
+      popup: `${technicianLocation.name}\nTechnician Location`,
+      icon: 'technician' as const,
     });
-    
-  }, [clientLocation, technicianLocation, showRoute, routeInfo, currentPosition]);
+  }
 
-  const handleEnableGPS = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "GPS Not Available",
-        description: "Your device doesn't support GPS tracking",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Add current GPS location if available
+  if (currentPosition) {
+    markers.push({
+      position: [currentPosition.coords.latitude, currentPosition.coords.longitude] as LatLngTuple,
+      popup: `Your GPS Location\nAccuracy: ${currentPosition.coords.accuracy?.toFixed(0)}m`,
+      icon: 'location' as const,
+    });
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCurrentPosition(position);
-        toast({
-          title: "GPS Enabled",
-          description: "Your location is now being tracked",
-        });
-      },
-      (error) => {
-        toast({
-          title: "GPS Error",
-          description: "Unable to access your location. Please check permissions.",
-          variant: "destructive",
-        });
-      }
+  // Create route path if both locations exist
+  const routePath: LatLngTuple[] = [];
+  if (showRoute && technicianLocation) {
+    routePath.push(
+      [technicianLocation.lat, technicianLocation.lng],
+      [clientLocation.lat, clientLocation.lng]
     );
+  }
+
+  // Calculate center point for the map
+  const center: LatLngTuple = [clientLocation.lat, clientLocation.lng];
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    if (onLocationUpdate) {
+      onLocationUpdate(lat, lng);
+    }
+    toast({
+      title: "Location Updated",
+      description: `New location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+    });
   };
-  
+
   return (
-    <div className={`relative ${className}`}>
-      <div 
-        ref={mapRef} 
-        className="w-full h-full bg-white rounded-lg shadow-lg border overflow-hidden"
-      >
-        <div className="w-full h-full flex items-center justify-center">
-          <p className="text-black">Loading GPS tracking map...</p>
+    <div className={`w-full space-y-4 ${className}`}>
+      {/* GPS Status */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+        <div className="flex items-center space-x-2">
+          <Crosshair className={`h-5 w-5 ${isTrackingLocation ? 'text-green-600' : 'text-gray-400'}`} />
+          <span className="font-medium text-gray-900">GPS Tracking</span>
+          <div className={`h-2 w-2 rounded-full ${isTrackingLocation ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
         </div>
-      </div>
-      
-      {/* GPS Controls */}
-      <div className="absolute top-4 right-4 space-y-2">
-        <Button
-          size="sm"
-          variant={isTrackingLocation ? "default" : "outline"}
-          onClick={handleEnableGPS}
-          className="shadow-lg"
-        >
-          <Crosshair className="h-4 w-4 mr-1" />
-          {isTrackingLocation ? 'GPS On' : 'Enable GPS'}
-        </Button>
-        
         {locationError && (
-          <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700">
-            {locationError}
-          </div>
+          <span className="text-sm text-red-600">{locationError}</span>
         )}
       </div>
-      
-      {/* GPS Status */}
-      {currentPosition && (
-        <div className="absolute top-16 right-4 bg-white border border-black rounded-lg p-2">
-          <div className="text-xs text-black">
-            <div className="font-medium">GPS Active</div>
-            <div>Accuracy: ±{Math.round(currentPosition.coords.accuracy || 0)}m</div>
+
+      {/* Route Information */}
+      {routeInfo && showRoute && (
+        <div className="bg-white rounded-lg p-4 shadow-sm border">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium text-gray-900">Route Information</h3>
+            {isCalculating && (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm text-gray-500">Calculating...</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-4 mb-3">
+            <div className="flex items-center space-x-2">
+              <Navigation className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-gray-900">{routeInfo.distance}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4 text-green-600" />
+              <span className="font-medium text-gray-900">{routeInfo.duration}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {routeInfo.steps.map((step, index) => (
+              <div key={index} className="flex items-start space-x-3 text-sm">
+                <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-900">{step.instruction}</p>
+                  <p className="text-gray-500">{step.distance}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
-      
-      {/* Route Information Panel */}
-      {showRoute && technicianLocation && (
-        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs border">
-          <div className="flex items-center space-x-2 mb-3">
-            <Navigation className="h-5 w-5 text-black" />
-            <span className="font-semibold text-black">Live Tracking</span>
-          </div>
-          
-          {isCalculating ? (
+
+      {/* Tracking Map */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="p-3 bg-gray-50 border-b">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
-              <span className="text-sm text-black">Calculating route...</span>
+              <MapPin className="h-5 w-5 text-blue-600" />
+              <span className="font-medium text-gray-900">Location Tracking</span>
             </div>
-          ) : routeInfo ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-black" />
-                  <span className="text-sm font-medium">Distance:</span>
-                </div>
-                <span className="text-sm font-bold text-black">{routeInfo.distance}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-black" />
-                  <span className="text-sm font-medium">ETA:</span>
-                </div>
-                <span className="text-sm font-bold text-black">{routeInfo.duration}</span>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
-      
-      {/* Location Info Panel */}
-      <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-3 border">
-        <div className="grid grid-cols-1 gap-2">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-black rounded-full"></div>
-            <span className="text-sm font-medium">Your Location:</span>
-            <span className="text-sm text-black truncate">
-              {currentPosition ? 
-                `GPS: ${currentPosition.coords.latitude.toFixed(4)}, ${currentPosition.coords.longitude.toFixed(4)}` :
-                clientLocation.address
-              }
-            </span>
+            <span className="text-sm text-gray-500">Click map to update location</span>
           </div>
-          
-          {technicianLocation && (
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-              <span className="text-sm font-medium">Technician:</span>
-              <span className="text-sm text-black">{technicianLocation.name}</span>
-            </div>
-          )}
         </div>
+        
+        <LeafletMap
+          center={center}
+          zoom={15}
+          height="400px"
+          markers={markers}
+          routePath={routePath}
+          onLocationSelect={handleLocationSelect}
+          showLocationButton={true}
+          trackingMode={true}
+        />
       </div>
+
+      {/* Current Position Info */}
+      {currentPosition && (
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <Crosshair className="h-5 w-5 text-green-600 mt-0.5" />
+            <div>
+              <p className="font-medium text-green-900">GPS Location Active</p>
+              <p className="text-sm text-green-700 mt-1">
+                Accuracy: {currentPosition.coords.accuracy?.toFixed(0)}m | 
+                Speed: {currentPosition.coords.speed ? `${(currentPosition.coords.speed * 3.6).toFixed(1)} km/h` : 'Unknown'}
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                {currentPosition.coords.latitude.toFixed(6)}, {currentPosition.coords.longitude.toFixed(6)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

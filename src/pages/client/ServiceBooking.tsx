@@ -28,8 +28,10 @@ const ServiceBooking = () => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | 'none'>('none');
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'details' | 'location' | 'searching'>('details');
+  const [step, setStep] = useState<'details' | 'location'>('details');
   const [searchError, setSearchError] = useState<string>('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [serviceRequestCreated, setServiceRequestCreated] = useState(false);
   
   const handleMediaUpload = (files: File[], type: 'image' | 'video' | 'audio') => {
     setMediaFiles(files);
@@ -47,45 +49,36 @@ const ServiceBooking = () => {
       title: "Location Updated",
       description: "GPS location has been updated",
     });
+
+    // Auto-start technician search when location is set
+    if (!serviceRequestCreated) {
+      handleCreateServiceRequest(lat, lng, simulatedAddress);
+    }
   };
 
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
+    const simulatedAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)} (Selected on map)`;
+    setAddress(simulatedAddress);
+    
+    // Auto-start technician search when location is manually selected
+    if (!serviceRequestCreated) {
+      handleCreateServiceRequest(lat, lng, simulatedAddress);
+    }
   };
 
-  const handleConfirmLocation = () => {
-    if (!selectedLocation || !address.trim()) {
-      toast({
-        title: "Location required",
-        description: "Please select a location and enter your address",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    handleSubmit();
-  };
-  
-  const handleSubmit = async () => {
+  const handleCreateServiceRequest = async (lat: number, lng: number, addressToUse: string) => {
     if (!description.trim()) {
       toast({
         title: "Description required",
-        description: "Please describe the issue you need help with",
+        description: "Please go back and describe the issue you need help with",
         variant: "destructive",
       });
       return;
     }
-    
-    if (!selectedLocation || !address.trim()) {
-      toast({
-        title: "Location required",
-        description: "Please select your service location",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+
     setIsLoading(true);
+    setIsSearching(true);
     setSearchError('');
     
     try {
@@ -100,22 +93,18 @@ const ServiceBooking = () => {
         mediaUrls,
         mediaType,
         location: {
-          lat: selectedLocation.lat,
-          lng: selectedLocation.lng,
-          address,
+          lat,
+          lng,
+          address: addressToUse,
         },
         isVisitRequired,
       });
       
       setCurrentRequest(serviceRequest);
-      setStep('searching');
+      setServiceRequestCreated(true);
       
-      // Use real auto-assignment with service type filtering
-      const assigned = await autoAssignTechnician(
-        serviceRequest.id,
-        selectedLocation.lat,
-        selectedLocation.lng
-      );
+      // Start technician search
+      const assigned = await autoAssignTechnician(serviceRequest.id, lat, lng);
       
       if (assigned) {
         toast({
@@ -138,6 +127,22 @@ const ServiceBooking = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
+    }
+  };
+
+  const handleConfirmLocationAndSearch = () => {
+    if (!selectedLocation || !address.trim()) {
+      toast({
+        title: "Location required",
+        description: "Please select a location on the map or use GPS",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!serviceRequestCreated) {
+      handleCreateServiceRequest(selectedLocation.lat, selectedLocation.lng, address);
     }
   };
   
@@ -146,7 +151,7 @@ const ServiceBooking = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <button 
             onClick={() => step === 'location' ? setStep('details') : navigate('/client/services')}
             className="flex items-center text-primary hover:underline mb-4"
@@ -157,188 +162,212 @@ const ServiceBooking = () => {
             {step === 'location' ? 'Back to details' : 'Back to services'}
           </button>
           
-          <h1 className="text-2xl font-bold mb-6">
+          <h1 className="text-3xl font-bold mb-6">
             {step === 'details' 
               ? `Book a ${formattedServiceType} Service` 
-              : step === 'location' 
-                ? 'Select Service Location'
-                : `Finding ${formattedServiceType} Technician`
+              : `Select Location & Find ${formattedServiceType}`
             }
           </h1>
 
           {step === 'details' && (
-            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); setStep('location'); }}>
-              <div>
-                <Label htmlFor="description" className="text-base font-medium">
-                  Describe your issue
-                </Label>
-                <Textarea
-                  id="description"
-                  placeholder="Provide details about the problem you're experiencing..."
-                  className="mt-1"
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-base font-medium">
-                  Add photos, videos, or audio description
-                </Label>
-                <MediaUpload onMediaUpload={handleMediaUpload} />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="visit"
-                  checked={isVisitRequired}
-                  onCheckedChange={setIsVisitRequired}
-                />
-                <Label htmlFor="visit" className="cursor-pointer">
-                  Request an in-person visit
-                </Label>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full py-6 text-lg"
-                disabled={!description.trim()}
-              >
-                Continue to Location Selection
-              </Button>
-            </form>
-          )}
-
-          {step === 'searching' && (
-            <div className="space-y-6">
-              <TechnicianSearchProgress
-                isSearching={isLoading}
-                serviceType={serviceType as ServiceType}
-                location={selectedLocation ? {
-                  lat: selectedLocation.lat,
-                  lng: selectedLocation.lng,
-                  address: address
-                } : undefined}
-                searchError={searchError}
-                onAutoAssign={async () => {
-                  if (!selectedLocation || !currentRequest) return;
-                  
-                  setIsLoading(true);
-                  setSearchError('');
-                  
-                  try {
-                    const assigned = await autoAssignTechnician(
-                      currentRequest.id,
-                      selectedLocation.lat,
-                      selectedLocation.lng
-                    );
-                    
-                    if (assigned) {
-                      toast({
-                        title: "Technician Assigned!",
-                        description: "A technician has been found and is on the way.",
-                      });
-                      setTimeout(() => {
-                        navigate('/client/tracking');
-                      }, 2000);
-                    } else {
-                      setSearchError("No technicians available in your area right now. Please try again later.");
-                    }
-                  } catch (error) {
-                    setSearchError("Failed to find technician. Please try again.");
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-              />
-              
-              {searchError && (
-                <div className="text-center">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setStep('location');
-                      setSearchError('');
-                    }}
-                    className="mt-4"
-                  >
-                    Back to Location Selection
-                  </Button>
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); setStep('location'); }}>
+                <div>
+                  <Label htmlFor="description" className="text-base font-medium">
+                    Describe your issue
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Provide details about the problem you're experiencing..."
+                    className="mt-1"
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                  />
                 </div>
-              )}
+                
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">
+                    Add photos, videos, or audio description
+                  </Label>
+                  <MediaUpload onMediaUpload={handleMediaUpload} />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="visit"
+                    checked={isVisitRequired}
+                    onCheckedChange={setIsVisitRequired}
+                  />
+                  <Label htmlFor="visit" className="cursor-pointer">
+                    Request an in-person visit
+                  </Label>
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full py-6 text-lg"
+                  disabled={!description.trim()}
+                >
+                  Continue to Location & Technician Search
+                </Button>
+              </form>
             </div>
           )}
 
           {step === 'location' && (
             <div className="space-y-6">
-              <div>
-                <Label htmlFor="address" className="text-base font-medium">
-                  Service Address
-                </Label>
-                <Input
-                  id="address"
-                  placeholder="Enter your address or use GPS location"
-                  className="mt-1"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Enable GPS for automatic location detection
-                </p>
-              </div>
+              {/* Location Selection Section */}
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4">Step 1: Select Your Location</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="address" className="text-base font-medium">
+                      Service Address
+                    </Label>
+                    <Input
+                      id="address"
+                      placeholder="Enter your address or use GPS location"
+                      className="mt-1"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      required
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Enable GPS for automatic location detection or click on the map
+                    </p>
+                  </div>
 
-              <div>
-                <Label className="text-base font-medium mb-2 block">
-                  GPS Tracking Map
-                </Label>
-                <div 
-                  className="cursor-crosshair"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const lat = 40.7128 + (y - rect.height / 2) * 0.001;
-                    const lng = -74.006 + (x - rect.width / 2) * 0.001;
-                    handleLocationSelect(lat, lng);
-                    setAddress(`${lat.toFixed(4)}, ${lng.toFixed(4)} (Selected on map)`);
-                  }}
-                >
-                  <TrackingMap 
-                    clientLocation={{
-                      lat: selectedLocation?.lat || 40.7128,
-                      lng: selectedLocation?.lng || -74.006,
-                      address: address || 'Your location'
-                    }}
-                    onLocationUpdate={handleLocationUpdate}
-                    className="h-80 border-2 border-dashed border-gray-300 hover:border-primary"
-                  />
+                  <div>
+                    <Label className="text-base font-medium mb-2 block">
+                      Interactive Location Map
+                    </Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg hover:border-primary transition-colors">
+                      <TrackingMap 
+                        clientLocation={{
+                          lat: selectedLocation?.lat || 40.7128,
+                          lng: selectedLocation?.lng || -74.006,
+                          address: address || 'Your location'
+                        }}
+                        onLocationUpdate={handleLocationUpdate}
+                        className="h-80"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Click "My Location" for GPS or click anywhere on the map to select manually
+                    </p>
+                  </div>
+
+                  {selectedLocation && (
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <h3 className="font-medium text-green-800 mb-2">✅ Location Confirmed</h3>
+                      <p className="text-sm text-green-700">
+                        Latitude: {selectedLocation.lat.toFixed(6)}<br/>
+                        Longitude: {selectedLocation.lng.toFixed(6)}<br/>
+                        Address: {address}
+                      </p>
+                    </div>
+                  )}
+
+                  {!serviceRequestCreated && selectedLocation && (
+                    <Button
+                      onClick={handleConfirmLocationAndSearch}
+                      className="w-full py-4 text-lg"
+                      disabled={!selectedLocation || !address.trim() || isLoading}
+                    >
+                      {isLoading ? "Creating Service Request..." : "Confirm Location & Find Technicians"}
+                    </Button>
+                  )}
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Click "Enable GPS" for automatic location or click on the map to select manually
-                </p>
               </div>
 
-              {selectedLocation && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-medium text-green-800 mb-2">Location Confirmed</h3>
-                  <p className="text-sm text-green-700">
-                    Latitude: {selectedLocation.lat.toFixed(6)}<br/>
-                    Longitude: {selectedLocation.lng.toFixed(6)}<br/>
-                    Address: {address}
-                  </p>
+              {/* Technician Search Section - Shows after location is selected */}
+              {(selectedLocation && serviceRequestCreated) && (
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  <h2 className="text-xl font-semibold mb-4">Step 2: Finding Available Technicians</h2>
+                  
+                  <TechnicianSearchProgress
+                    isSearching={isSearching}
+                    serviceType={serviceType as ServiceType}
+                    location={selectedLocation ? {
+                      lat: selectedLocation.lat,
+                      lng: selectedLocation.lng,
+                      address: address
+                    } : undefined}
+                    searchError={searchError}
+                    onAutoAssign={async () => {
+                      if (!selectedLocation || !currentRequest) return;
+                      
+                      setIsLoading(true);
+                      setIsSearching(true);
+                      setSearchError('');
+                      
+                      try {
+                        const assigned = await autoAssignTechnician(
+                          currentRequest.id,
+                          selectedLocation.lat,
+                          selectedLocation.lng
+                        );
+                        
+                        if (assigned) {
+                          toast({
+                            title: "Technician Assigned!",
+                            description: "A technician has been found and is on the way.",
+                          });
+                          setTimeout(() => {
+                            navigate('/client/tracking');
+                          }, 2000);
+                        } else {
+                          setSearchError("No technicians available in your area right now. Please try again later.");
+                        }
+                      } catch (error) {
+                        setSearchError("Failed to find technician. Please try again.");
+                      } finally {
+                        setIsLoading(false);
+                        setIsSearching(false);
+                      }
+                    }}
+                  />
+                  
+                  {searchError && (
+                    <div className="mt-4 text-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setServiceRequestCreated(false);
+                          setSearchError('');
+                        }}
+                        className="mr-2"
+                      >
+                        Change Location
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setSearchError('');
+                          handleCreateServiceRequest(selectedLocation.lat, selectedLocation.lng, address);
+                        }}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
-              <Button
-                onClick={handleConfirmLocation}
-                className="w-full py-6 text-lg"
-                disabled={!selectedLocation || !address.trim() || isLoading}
-              >
-                {isLoading ? "Finding & Assigning Technician..." : "Book Service Now"}
-              </Button>
+              {/* Instructions for better UX */}
+              {step === 'location' && !selectedLocation && (
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="font-medium text-blue-900 mb-2">📍 How to select your location:</h3>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Click the "My Location" button on the map for automatic GPS detection</li>
+                    <li>• Or click anywhere on the map to manually select your location</li>
+                    <li>• Type your address in the field above for manual entry</li>
+                    <li>• Once location is set, we'll automatically start finding nearby technicians</li>
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

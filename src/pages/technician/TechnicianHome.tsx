@@ -9,6 +9,8 @@ import { ServiceRequest } from '@/types';
 import TechnicianLocationTracker from '@/components/TechnicianLocationTracker';
 import Footer from '@/components/Footer';
 import RoleSwitcher from '@/components/RoleSwitcher';
+import MenuSidebar from '@/components/MenuSidebar';
+import { Menu } from 'lucide-react';
 
 const TechnicianHome = () => {
   const { user, signOut } = useAuth();
@@ -17,6 +19,7 @@ const TechnicianHome = () => {
   
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isOnline, setIsOnline] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   useEffect(() => {
     if (user?.serviceType) {
@@ -52,11 +55,21 @@ const TechnicianHome = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-neutral-50 to-white">
+      <MenuSidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} userType="technician" />
+      
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-black">FixIt Pro</h1>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              <Menu size={24} className="text-neutral-700" />
+            </button>
+            <h1 className="text-2xl font-bold text-primary">EFIX</h1>
+          </div>
           <div className="flex items-center gap-3">
             <RoleSwitcher />
             <Button variant="outline" onClick={handleLogout}>
@@ -89,7 +102,7 @@ const TechnicianHome = () => {
           </div>
           
           {/* Welcome Card */}
-          <div className="bg-gradient-to-r from-white to-white rounded-lg p-6 mb-8">
+          <div className="bg-white rounded-lg p-6 mb-8 shadow-sm border border-neutral-200">
             <div className="flex items-start">
               <div className="mr-4">
                 {user?.profileImage ? (
@@ -99,20 +112,20 @@ const TechnicianHome = () => {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                 )}
               </div>
               
-              <div>
-                <h2 className="text-lg font-medium">Welcome, {user?.name || 'Technician'}</h2>
-                <p className="text-black">Your service type: <span className="font-medium capitalize">{user?.serviceType}</span></p>
+              <div className="flex-1">
+                <h2 className="text-lg font-medium text-neutral-900">Welcome, {user?.name || 'Technician'}</h2>
+                <p className="text-neutral-600">Service: <span className="font-medium capitalize text-primary">{user?.serviceType}</span></p>
                 
                 <div className="mt-2">
-                  <p className="text-sm">Personal ID: <span className="font-mono">{user?.personalId || 'N/A'}</span></p>
+                  <p className="text-sm text-neutral-500">ID: <span className="font-mono">{user?.personalId || 'N/A'}</span></p>
                 </div>
               </div>
             </div>

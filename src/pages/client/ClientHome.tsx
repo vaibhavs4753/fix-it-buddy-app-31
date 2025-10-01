@@ -6,12 +6,15 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useService } from '@/context/ServiceContext';
 import RoleSwitcher from '@/components/RoleSwitcher';
+import MenuSidebar from '@/components/MenuSidebar';
+import { Menu } from 'lucide-react';
 
 const ClientHome = () => {
   const { user, signOut } = useAuth();
   const { getRequestsForClient } = useService();
   const navigate = useNavigate();
   const [activeRequests, setActiveRequests] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -27,11 +30,21 @@ const ClientHome = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-neutral-50 to-white">
+      <MenuSidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} userType="client" />
+      
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-black">FixIt Pro</h1>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            >
+              <Menu size={24} className="text-neutral-700" />
+            </button>
+            <h1 className="text-2xl font-bold text-primary">EFIX</h1>
+          </div>
           <div className="flex items-center gap-3">
             <RoleSwitcher />
             <Button variant="outline" onClick={handleLogout}>

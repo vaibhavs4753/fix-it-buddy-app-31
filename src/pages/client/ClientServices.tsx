@@ -1,60 +1,73 @@
 
 import { Link } from 'react-router-dom';
-import ServiceTypeCard from '@/components/ServiceTypeCard';
+import { ArrowLeft, Zap, Wrench, Droplet } from 'lucide-react';
 import Footer from '@/components/Footer';
 
 const ClientServices = () => {
+  const services = [
+    {
+      id: 'electrician',
+      icon: Zap,
+      label: 'Electrician',
+      color: 'bg-amber-500',
+      path: '/client/booking/electrician',
+    },
+    {
+      id: 'mechanic',
+      icon: Wrench,
+      label: 'Mechanic',
+      color: 'bg-primary',
+      path: '/client/booking/mechanic',
+    },
+    {
+      id: 'plumber',
+      icon: Droplet,
+      label: 'Plumber',
+      color: 'bg-blue-500',
+      path: '/client/booking/plumber',
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-neutral-900">
       <div className="container mx-auto px-4 py-12 flex-grow">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
             <Link 
               to="/client/home" 
-              className="flex items-center text-primary hover:underline mb-4"
+              className="flex items-center text-neutral-400 hover:text-primary mb-6 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ArrowLeft className="mr-2" size={20} />
               Back to home
             </Link>
             
-            <h1 className="text-3xl font-bold mb-2">Book a Service</h1>
-            <p className="text-gray-600">
-              Select the type of service you need
-            </p>
+            <h1 className="text-3xl font-bold mb-2 text-white">Choose a</h1>
+            <h2 className="text-3xl font-bold text-white mb-4">Service for you</h2>
           </div>
           
-          <div className="space-y-6">
-            <ServiceTypeCard 
-              serviceType="electrician"
-              linkTo="/client/booking/electrician"
-              className="transform transition-all hover:scale-[1.02] hover:shadow-lg"
-            />
-            
-            <ServiceTypeCard 
-              serviceType="mechanic"
-              linkTo="/client/booking/mechanic"
-              className="transform transition-all hover:scale-[1.02] hover:shadow-lg"
-            />
-            
-            <ServiceTypeCard 
-              serviceType="plumber"
-              linkTo="/client/booking/plumber"
-              className="transform transition-all hover:scale-[1.02] hover:shadow-lg"
-            />
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return (
+                <Link
+                  key={service.id}
+                  to={service.path}
+                  className="flex flex-col items-center group"
+                >
+                  <div className={`w-20 h-20 ${service.color} rounded-2xl flex items-center justify-center mb-3 transform transition-all group-hover:scale-110 group-hover:shadow-lg`}>
+                    <Icon className="text-black" size={32} strokeWidth={2.5} />
+                  </div>
+                  <span className="text-white text-sm font-medium">{service.label}</span>
+                </Link>
+              );
+            })}
           </div>
-          
-          <div className="mt-10 bg-primary/10 p-6 rounded-lg">
-            <h3 className="font-medium text-lg mb-2">Not sure which service you need?</h3>
-            <p className="text-gray-600 mb-4">
-              Describe your problem and we'll help match you with the right professional.
+
+          <div className="mt-12 bg-neutral-800 p-6 rounded-xl border border-neutral-700">
+            <h3 className="font-medium text-lg mb-2 text-white">History</h3>
+            <p className="text-neutral-400 text-sm">
+              View your past service requests and bookings
             </p>
-            <Link to="/client/booking/general">
-              <button className="bg-white text-primary px-4 py-2 rounded-md hover:bg-gray-50 border border-primary/30">
-                General Assistance
-              </button>
-            </Link>
           </div>
         </div>
       </div>

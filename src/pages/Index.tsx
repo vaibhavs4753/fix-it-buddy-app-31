@@ -8,7 +8,7 @@ const Index = () => {
 
   useEffect(() => {
     // This effect is for initial page load
-    document.title = 'FixIt Pro - Professional Services';
+    document.title = 'EFIX - Professional Services';
   }, []);
 
   if (isLoading) {

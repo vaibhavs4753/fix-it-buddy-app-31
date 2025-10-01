@@ -1,7 +1,7 @@
-# Service Marketplace App - Project Documentation
+# EFIX Service Marketplace - Project Documentation
 
 ## Overview
-This is a React + Vite frontend application for a service marketplace that connects clients with technicians. The application uses Supabase as the backend for authentication, data storage, and real-time features. It includes features like service booking, payment processing, live tracking with maps, and user management for both clients and technicians.
+EFIX is a React + Vite frontend application for a service marketplace that connects clients with professional technicians. The application features a modern dark theme with yellow/gold branding (HSL 45 93% 47%), uses Supabase as the backend for authentication, data storage, and real-time features. It includes service booking, payment processing, live tracking with maps, and user management for both clients and technicians providing electrical, mechanical, and plumbing services.
 
 ## Project Architecture
 - **Frontend**: React + TypeScript + Vite
@@ -36,11 +36,24 @@ This is a React + Vite frontend application for a service marketplace that conne
 - Maps functionality requires Mapbox token configuration
 
 ## Recent Changes
-- **October 1, 2025**: Fresh GitHub import successfully configured for Replit
+- **October 1, 2025**: Complete EFIX rebrand and dark theme implementation
+  - Rebranded entire application from "FixIt Pro" to "EFIX"
+  - Implemented EFIX yellow/gold color scheme (HSL 45 93% 47%) as primary brand color
+  - Applied comprehensive dark theme across all main interfaces:
+    - Login and Auth pages with dark backgrounds and EFIX branding
+    - Client Home with dark theme (bg-neutral-900/black) and yellow accents
+    - Client Services selection with icon-based design using primary color
+    - Technician Home with dark theme, status toggle, and welcome card
+    - Footer updated to dark theme with EFIX branding
+  - Created MenuSidebar component with Help, Payment, History, Settings options
+  - Standardized all service icons to use consistent EFIX yellow color
+  - Updated index.html with EFIX title, description, and OpenGraph/Twitter meta tags
+  - Ensured all text is readable with white/neutral-400 colors on dark backgrounds
+
+- **October 1, 2025**: Initial GitHub import configuration
   - Installed all npm dependencies (467 packages)
   - Verified TypeScript configuration is working properly
   - Confirmed Vite development server runs successfully on port 5000
-  - Tested frontend accessibility - application showing "FixIt Pro" homepage
   - Configured deployment settings for autoscale deployment with build + serve
   - Tested production build successfully (built in 10.37s)
   - Added .env files to .gitignore for security

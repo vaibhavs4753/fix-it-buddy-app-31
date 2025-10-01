@@ -47,6 +47,7 @@ const Auth = ({ userType }: AuthProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (isLoading) return; // Prevent multiple submissions
     
@@ -280,7 +281,7 @@ const Auth = ({ userType }: AuthProps) => {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading || authLoading}
+            disabled={isLoading}
           >
             {isLoading 
               ? (isForgotPassword ? "Sending Reset Email..." : (isSignUp ? "Creating Account..." : "Signing In..."))

@@ -178,13 +178,14 @@ const Auth = ({ userType }: AuthProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="max-w-md w-full space-y-8 p-8 bg-card rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+      <div className="max-w-md w-full space-y-8 p-8 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold text-primary mb-2">EFIX</h1>
+          <h2 className="text-xl font-medium text-white">
             {isForgotPassword ? 'Reset Password' : (isSignUp ? 'Create Account' : 'Welcome Back')}
-          </h1>
-          <p className="mt-2 text-muted-foreground">
+          </h2>
+          <p className="mt-2 text-neutral-400">
             {isForgotPassword 
               ? "Enter your email to receive password reset instructions"
               : (isSignUp 
@@ -197,7 +198,7 @@ const Auth = ({ userType }: AuthProps) => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
               Email Address
             </label>
             <Input
@@ -214,7 +215,7 @@ const Auth = ({ userType }: AuthProps) => {
 
           {!isForgotPassword && (
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
                 Password
               </label>
               <div className="relative">
@@ -246,7 +247,7 @@ const Auth = ({ userType }: AuthProps) => {
 
           {isSignUp && !isForgotPassword && (
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-1">
                 Confirm Password
               </label>
               <div className="relative">

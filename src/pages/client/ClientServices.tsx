@@ -9,7 +9,7 @@ const ClientServices = () => {
       id: 'electrician',
       icon: Zap,
       label: 'Electrician',
-      color: 'bg-amber-500',
+      color: 'bg-primary',
       path: '/client/booking/electrician',
     },
     {
@@ -23,7 +23,7 @@ const ClientServices = () => {
       id: 'plumber',
       icon: Droplet,
       label: 'Plumber',
-      color: 'bg-blue-500',
+      color: 'bg-primary',
       path: '/client/booking/plumber',
     },
   ];

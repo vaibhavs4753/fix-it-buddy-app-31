@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -100,7 +100,6 @@ export type Database = {
           available_roles: string[] | null
           avatar_url: string | null
           created_at: string
-          email: string | null
           id: string
           name: string
           phone: string | null
@@ -112,7 +111,6 @@ export type Database = {
           available_roles?: string[] | null
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           id: string
           name: string
           phone?: string | null
@@ -124,7 +122,6 @@ export type Database = {
           available_roles?: string[] | null
           avatar_url?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           name?: string
           phone?: string | null
@@ -190,7 +187,6 @@ export type Database = {
           media_urls: string[] | null
           payment_method: string | null
           scheduled_time: string | null
-          service_id: string | null
           service_type: string
           status: string | null
           technician_id: string | null
@@ -212,7 +208,6 @@ export type Database = {
           media_urls?: string[] | null
           payment_method?: string | null
           scheduled_time?: string | null
-          service_id?: string | null
           service_type: string
           status?: string | null
           technician_id?: string | null
@@ -234,22 +229,13 @@ export type Database = {
           media_urls?: string[] | null
           payment_method?: string | null
           scheduled_time?: string | null
-          service_id?: string | null
           service_type?: string
           status?: string | null
           technician_id?: string | null
           updated_at?: string
           urgency?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "service_requests_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       service_sessions: {
         Row: {
@@ -385,45 +371,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_user_role: {
-        Args: { new_role: string }
-        Returns: boolean
-      }
-      create_payment_record: {
-        Args: {
-          p_amount: number
-          p_customer_id: string
-          p_payment_method: string
-          p_service_request_id: string
-          p_stripe_session_id?: string
-          p_technician_id: string
-        }
-        Returns: string
-      }
-      get_available_technicians_for_service: {
-        Args: {
-          client_lat: number
-          client_lng: number
-          radius_km?: number
-          service_type_param: string
-        }
-        Returns: {
-          availability_status: string
-          distance_km: number
-          id: string
-          name: string
-          rating: number
-          service_type: string
-        }[]
-      }
-      get_user_role: {
-        Args: { user_uuid: string }
-        Returns: string
-      }
-      switch_user_role: {
-        Args: { new_role: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

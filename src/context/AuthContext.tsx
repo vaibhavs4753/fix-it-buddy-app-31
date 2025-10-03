@@ -75,7 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setUser(appUser);
               setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
             } else {
-              // Fallback to metadata if profile doesn't exist
+              // Fallback to metadata if profile doesn't exist or there's an error
+              console.warn('Profile not found or error occurred, using fallback from user_metadata', profileError);
               const userType = session.user.user_metadata?.userType as UserType || 'client';
               const appUser: User = {
                 id: session.user.id,
@@ -88,8 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setAvailableRoles([userType]);
             }
           } catch (error) {
-            console.error('Error fetching profile:', error);
-            // Fallback to metadata
+            console.error('Error fetching profile (database may not be set up):', error);
+            // Fallback to metadata - this ensures auth works even without database tables
             const userType = session.user.user_metadata?.userType as UserType || 'client';
             const appUser: User = {
               id: session.user.id,

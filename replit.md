@@ -36,7 +36,25 @@ EFIX is a React + Vite frontend application for a service marketplace that conne
 - The application uses Supabase for all backend services
 - Maps functionality requires Mapbox token configuration
 
+## Database Setup (Required for Full Functionality)
+⚠️ **IMPORTANT**: Before using authentication features, you need to set up the database:
+1. Open `setup_database.sql` in this project
+2. Go to Supabase SQL Editor: https://supabase.com/dashboard/project/evhorhcqnomgbvvufxnt/sql
+3. Copy and paste the entire SQL script
+4. Run it to create all required tables, triggers, and functions
+
+See `DATABASE_SETUP_INSTRUCTIONS.md` for detailed instructions.
+
+**Note**: The app will work in limited mode without database setup (using local user metadata), but features like profiles, technician management, and service requests require the database to be properly configured.
+
 ## Recent Changes
+- **October 3, 2025**: Fixed authentication issues and improved database setup
+  - **IMPORTANT**: Created `setup_database.sql` file to set up required database tables
+  - Added `DATABASE_SETUP_INSTRUCTIONS.md` with step-by-step setup guide
+  - Improved AuthContext error handling to work even when database tables don't exist
+  - App now uses fallback to user_metadata if profiles table is missing
+  - Authentication will now work, but for full functionality you need to run the SQL setup script
+  
 - **October 3, 2025**: GitHub import setup completed for Replit environment
   - Verified all 467 npm dependencies installed successfully
   - Confirmed Vite development server running on port 5000 with proper Replit proxy configuration

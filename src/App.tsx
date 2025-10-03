@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import { ServiceProvider } from "./context/ServiceContext";
 
 // Pages
@@ -29,28 +29,17 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <ServiceProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Login />} />
               <Route path="/auth/client" element={<Auth userType="client" />} />
               <Route path="/auth/technician" element={<Auth userType="technician" />} />
               
@@ -121,16 +110,6 @@ const AppContent = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-    </>
-  );
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ServiceProvider>
-        <TooltipProvider>
-          <AppContent />
         </TooltipProvider>
       </ServiceProvider>
     </AuthProvider>

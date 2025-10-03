@@ -8,8 +8,9 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signUp: (email: string, password: string, userType: UserType) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (phone: string, userType: UserType) => Promise<{ error: any }>;
+  signIn: (phone: string) => Promise<{ error: any }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ data: any, error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updateUserProfile: (userData: Partial<User>) => Promise<void>;
@@ -127,14 +128,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, userType: UserType) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
+  const signUp = async (phone: string, userType: UserType) => {
+    // Send OTP to phone number for sign up
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
       options: {
-        emailRedirectTo: redirectUrl,
+        shouldCreateUser: true,
         data: {
           userType: userType
         }
@@ -144,13 +143,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  const signIn = async (phone: string) => {
+    // Send OTP to phone number for sign in
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: {
+        shouldCreateUser: false
+      }
     });
     
     return { error };
+  };
+
+  const verifyOtp = async (phone: string, token: string) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: 'sms'
+    });
+    
+    return { data, error };
   };
 
   const signOut = async () => {
@@ -237,6 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         signUp,
         signIn,
+        verifyOtp,
         signOut,
         resetPassword,
         updateUserProfile,

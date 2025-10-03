@@ -10,6 +10,8 @@ const Login = () => {
   const [selectedType, setSelectedType] = useState<'client' | 'technician' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  console.log('[Login] render');
+
   const handleSelection = (type: 'client' | 'technician') => {
     setIsAnimating(true);
     setSelectedType(type);

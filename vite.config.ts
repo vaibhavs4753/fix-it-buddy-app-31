@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig(() => ({
   server: {
     host: "0.0.0.0",
-    port: 5000,
+    port: 8080,
     hmr: false,
     allowedHosts: "all", // Critical for Replit proxy
   },

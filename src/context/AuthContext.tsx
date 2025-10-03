@@ -212,7 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || !availableRoles.includes(newRole)) return;
     
     try {
-      const { error } = await supabase.rpc('switch_user_role', {
+      const { error } = await (supabase as any).rpc('switch_user_role', {
         new_role: newRole
       });
       
@@ -228,7 +228,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || availableRoles.includes(newRole)) return;
     
     try {
-      const { error } = await supabase.rpc('add_user_role', {
+      const { error } = await (supabase as any).rpc('add_user_role', {
         new_role: newRole
       });
       

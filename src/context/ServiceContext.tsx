@@ -373,7 +373,7 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
   const findNearbyTechnicians = async (serviceType: ServiceType, lat: number, lng: number): Promise<Technician[]> => {
     try {
       // Use the secure function to get available technicians within radius
-      const { data, error } = await supabase.rpc('get_available_technicians_for_service', {
+      const { data, error } = await (supabase as any).rpc('get_available_technicians_for_service', {
         service_type_param: serviceType,
         client_lat: lat,
         client_lng: lng,
@@ -382,7 +382,7 @@ export const ServiceProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      const techniciansWithLocation: Technician[] = data.map((profile: any) => ({
+      const techniciansWithLocation: Technician[] = (data || []).map((profile: any) => ({
         id: profile.id,
         name: profile.name,
         phone: '', // Phone not available in secure function response

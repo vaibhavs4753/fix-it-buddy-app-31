@@ -18,7 +18,7 @@ const Login = () => {
     
     setTimeout(() => {
       setUserType(type);
-      navigate(`/auth/${type}`);
+      navigate(`/register/${type}`);
     }, 500);
   };
 

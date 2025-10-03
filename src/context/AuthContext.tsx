@@ -129,16 +129,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (phone: string, userType: UserType) => {
+    // Get registration data from sessionStorage if available
+    const savedData = sessionStorage.getItem('registrationData');
+    let userData: any = { userType };
+    
+    if (savedData) {
+      const regData = JSON.parse(savedData);
+      userData = {
+        userType,
+        name: regData.name,
+        age: regData.age
+      };
+    }
+
     // Send OTP to phone number for sign up
     const { error } = await supabase.auth.signInWithOtp({
       phone,
       options: {
         shouldCreateUser: true,
-        data: {
-          userType: userType
-        }
+        data: userData
       }
     });
+    
+    // Clear registration data after signup attempt
+    if (savedData) {
+      sessionStorage.removeItem('registrationData');
+    }
     
     return { error };
   };

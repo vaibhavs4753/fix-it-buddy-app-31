@@ -9,6 +9,7 @@ import { ServiceProvider } from "./context/ServiceContext";
 
 // Pages
 import Login from "./pages/Login";
+import Registration from "./pages/Registration";
 import Auth from "./pages/Auth";
 import ClientProfileSetup from "./pages/client/ClientProfileSetup";
 import ClientHome from "./pages/client/ClientHome";
@@ -40,6 +41,8 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
+              <Route path="/register/client" element={<Registration userType="client" />} />
+              <Route path="/register/technician" element={<Registration userType="technician" />} />
               <Route path="/auth/client" element={<Auth userType="client" />} />
               <Route path="/auth/technician" element={<Auth userType="technician" />} />
               

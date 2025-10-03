@@ -21,6 +21,17 @@ const Auth = ({ userType }: AuthProps) => {
     phone: '',
     otp: '',
   });
+  const [registrationData, setRegistrationData] = useState<{name: string; age: number; userType: string} | null>(null);
+
+  // Check for registration data from previous page
+  useEffect(() => {
+    const savedData = sessionStorage.getItem('registrationData');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      setRegistrationData(data);
+      setIsSignUp(true); // User is signing up
+    }
+  }, []);
 
   // Redirect if already authenticated when auth state is stable
   useEffect(() => {
@@ -48,7 +59,9 @@ const Auth = ({ userType }: AuthProps) => {
     if (isLoading) return; // Prevent multiple submissions
     
     // Validate phone number
-    if (!formData.phone) {
+    let phoneNumber = formData.phone.trim();
+    
+    if (!phoneNumber) {
       toast({
         title: "Phone number required",
         description: "Please enter your phone number",
@@ -57,11 +70,17 @@ const Auth = ({ userType }: AuthProps) => {
       return;
     }
 
-    // Validate phone format (must start with +)
-    if (!formData.phone.startsWith('+')) {
+    // Auto-add +91 if no country code provided
+    if (!phoneNumber.startsWith('+')) {
+      phoneNumber = '+91' + phoneNumber;
+      setFormData({ ...formData, phone: phoneNumber });
+    }
+
+    // Validate phone format
+    if (phoneNumber.length < 10) {
       toast({
-        title: "Invalid phone format",
-        description: "Phone number must include country code (e.g., +1234567890)",
+        title: "Invalid phone number",
+        description: "Please enter a valid phone number",
         variant: "destructive",
       });
       return;
@@ -71,8 +90,8 @@ const Auth = ({ userType }: AuthProps) => {
     
     try {
       const result = isSignUp 
-        ? await signUp(formData.phone, userType)
-        : await signIn(formData.phone);
+        ? await signUp(phoneNumber, userType)
+        : await signIn(phoneNumber);
       
       if (result.error) {
         let errorTitle = "Error";
@@ -216,13 +235,13 @@ const Auth = ({ userType }: AuthProps) => {
                 name="phone"
                 type="tel"
                 required
-                placeholder="+1234567890"
+                placeholder="Enter 10-digit number"
                 value={formData.phone}
                 onChange={handleInputChange}
                 className="w-full"
               />
               <p className="mt-1 text-xs text-neutral-500">
-                Include country code (e.g., +1 for USA, +91 for India)
+                Enter your phone number (we'll auto-add +91 for India)
               </p>
             </div>
 
@@ -291,15 +310,17 @@ const Auth = ({ userType }: AuthProps) => {
 
         {!otpSent && (
           <div className="text-center space-y-2">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline text-sm"
-            >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"
-              }
-            </button>
+            {!registrationData && (
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline text-sm"
+              >
+                {isSignUp 
+                  ? "Already have an account? Sign in" 
+                  : "Don't have an account? Sign up"
+                }
+              </button>
+            )}
             
             <div>
               <button 

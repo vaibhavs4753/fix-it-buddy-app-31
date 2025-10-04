@@ -8,12 +8,19 @@ interface MenuSidebarProps {
 }
 
 const MenuSidebar = ({ isOpen, onClose, userType }: MenuSidebarProps) => {
-  const menuItems = [
-    { icon: HelpCircle, label: 'Help', path: '#' },
-    { icon: CreditCard, label: 'Payment', path: '#' },
-    { icon: History, label: 'History', path: `/${userType}/requests` },
-    { icon: Settings, label: 'Settings', path: '#' },
-  ];
+  const menuItems = userType === 'technician' 
+    ? [
+        { icon: History, label: 'Service History', path: `/${userType}/requests` },
+        { icon: CreditCard, label: 'Earnings', path: '#' },
+        { icon: Settings, label: 'Settings', path: '#' },
+        { icon: HelpCircle, label: 'Help', path: '#' },
+      ]
+    : [
+        { icon: HelpCircle, label: 'Help', path: '#' },
+        { icon: CreditCard, label: 'Payment', path: '#' },
+        { icon: History, label: 'History', path: `/${userType}/requests` },
+        { icon: Settings, label: 'Settings', path: '#' },
+      ];
 
   return (
     <>

@@ -226,18 +226,39 @@ const Auth = ({ userType }: AuthProps) => {
       <div className="max-w-md w-full space-y-8 p-8 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800 relative z-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary mb-2">EFIX</h1>
-          <h2 className="text-xl font-medium text-white">
-            {otpSent ? 'Enter Verification Code' : (isSignUp ? 'Create Account' : 'Welcome Back')}
-          </h2>
-          <p className="mt-2 text-neutral-400">
-            {otpSent 
-              ? `We sent a 6-digit code to ${formData.email}`
-              : (isSignUp 
-                ? `Sign up as a ${userType}` 
-                : `Sign in to your ${userType} account`
-              )
-            }
-          </p>
+          
+          {/* Different header based on user type */}
+          {userType === 'technician' ? (
+            <>
+              <h2 className="text-xl font-medium text-white">
+                {otpSent ? 'Enter Verification Code' : (isSignUp ? 'Join as Technician' : 'Technician Portal')}
+              </h2>
+              <p className="mt-2 text-neutral-400">
+                {otpSent 
+                  ? `We sent a 6-digit code to ${formData.email}`
+                  : (isSignUp 
+                    ? 'Provide professional services and grow your business' 
+                    : 'Access your service requests and earnings'
+                  )
+                }
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-medium text-white">
+                {otpSent ? 'Enter Verification Code' : (isSignUp ? 'Get Started' : 'Welcome Back')}
+              </h2>
+              <p className="mt-2 text-neutral-400">
+                {otpSent 
+                  ? `We sent a 6-digit code to ${formData.email}`
+                  : (isSignUp 
+                    ? 'Book trusted professionals for your home services' 
+                    : 'Find and book services instantly'
+                  )
+                }
+              </p>
+            </>
+          )}
         </div>
 
         {!otpSent ? (

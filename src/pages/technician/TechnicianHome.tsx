@@ -32,7 +32,7 @@ const TechnicianHome = () => {
     if (user) {
       await acceptServiceRequest(request.id);
       setCurrentRequest(request);
-      navigate('/technician/service-details');
+      navigate('/technician/tracking');
     }
   };
   

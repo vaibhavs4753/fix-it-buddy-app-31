@@ -22,6 +22,7 @@ import Tracking from "./pages/client/Tracking";
 import ServiceSelection from "./pages/technician/ServiceSelection";
 import TechnicianProfileSetup from "./pages/technician/TechnicianProfileSetup";
 import TechnicianHome from "./pages/technician/TechnicianHome";
+import TechnicianTracking from "./pages/technician/TechnicianTracking";
 import ServiceDetails from "./pages/technician/ServiceDetails";
 import NotFound from "./pages/NotFound";
 
@@ -97,6 +98,11 @@ const App = () => (
               <Route path="/technician/home" element={
                 <ProtectedRoute userType="technician">
                   <TechnicianHome />
+                </ProtectedRoute>
+              } />
+              <Route path="/technician/tracking" element={
+                <ProtectedRoute userType="technician">
+                  <TechnicianTracking />
                 </ProtectedRoute>
               } />
               <Route path="/technician/service-details" element={

@@ -18,7 +18,7 @@ const Auth = ({ userType }: AuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [formData, setFormData] = useState({
-    phone: '',
+    email: '',
     otp: '',
   });
   const [registrationData, setRegistrationData] = useState<{name: string; age: number; userType: string} | null>(null);
@@ -58,29 +58,24 @@ const Auth = ({ userType }: AuthProps) => {
     
     if (isLoading) return; // Prevent multiple submissions
     
-    // Validate phone number
-    let phoneNumber = formData.phone.trim();
+    // Validate email
+    const email = formData.email.trim();
     
-    if (!phoneNumber) {
+    if (!email) {
       toast({
-        title: "Phone number required",
-        description: "Please enter your phone number",
+        title: "Email required",
+        description: "Please enter your email address",
         variant: "destructive",
       });
       return;
     }
 
-    // Auto-add +91 if no country code provided
-    if (!phoneNumber.startsWith('+')) {
-      phoneNumber = '+91' + phoneNumber;
-      setFormData({ ...formData, phone: phoneNumber });
-    }
-
-    // Validate phone format
-    if (phoneNumber.length < 10) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast({
-        title: "Invalid phone number",
-        description: "Please enter a valid phone number",
+        title: "Invalid email",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
@@ -90,8 +85,8 @@ const Auth = ({ userType }: AuthProps) => {
     
     try {
       const result = isSignUp 
-        ? await signUp(phoneNumber, userType)
-        : await signIn(phoneNumber);
+        ? await signUp(email, userType)
+        : await signIn(email);
       
       if (result.error) {
         let errorTitle = "Error";
@@ -100,10 +95,10 @@ const Auth = ({ userType }: AuthProps) => {
         // Handle specific error cases
         if (result.error.message?.includes('User not found')) {
           errorTitle = "Account Not Found";
-          errorDescription = "No account found with this phone number. Please sign up first.";
-        } else if (result.error.message?.includes('Invalid phone number')) {
-          errorTitle = "Invalid Phone Number";
-          errorDescription = "Please enter a valid phone number with country code (e.g., +1234567890)";
+          errorDescription = "No account found with this email. Please sign up first.";
+        } else if (result.error.message?.includes('Invalid email')) {
+          errorTitle = "Invalid Email";
+          errorDescription = "Please enter a valid email address";
         } else if (result.error.message?.includes('rate limit')) {
           errorTitle = "Too Many Requests";
           errorDescription = "Please wait a moment before requesting another OTP.";
@@ -118,7 +113,7 @@ const Auth = ({ userType }: AuthProps) => {
         setOtpSent(true);
         toast({
           title: "OTP Sent!",
-          description: "Please check your phone for the verification code",
+          description: "Please check your email for the verification code",
         });
       }
     } catch (error) {
@@ -150,7 +145,7 @@ const Auth = ({ userType }: AuthProps) => {
     setIsLoading(true);
     
     try {
-      const result = await verifyOtp(formData.phone, formData.otp);
+      const result = await verifyOtp(formData.email, formData.otp);
       
       if (result.error) {
         let errorTitle = "Verification Failed";
@@ -214,7 +209,7 @@ const Auth = ({ userType }: AuthProps) => {
           </h2>
           <p className="mt-2 text-neutral-400">
             {otpSent 
-              ? `We sent a 6-digit code to ${formData.phone}`
+              ? `We sent a 6-digit code to ${formData.email}`
               : (isSignUp 
                 ? `Sign up as a ${userType}` 
                 : `Sign in to your ${userType} account`
@@ -227,21 +222,21 @@ const Auth = ({ userType }: AuthProps) => {
           // Phone Number Input Form
           <form onSubmit={handleSendOtp} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white mb-1">
-                Phone Number
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
+                Email Address
               </label>
               <Input
-                id="phone"
-                name="phone"
-                type="tel"
+                id="email"
+                name="email"
+                type="email"
                 required
-                placeholder="Enter 10-digit number"
-                value={formData.phone}
+                placeholder="Enter your email"
+                value={formData.email}
                 onChange={handleInputChange}
                 className="w-full"
               />
               <p className="mt-1 text-xs text-neutral-500">
-                Enter your phone number (we'll auto-add +91 for India)
+                We'll send a verification code to this email
               </p>
             </div>
 
@@ -273,7 +268,7 @@ const Auth = ({ userType }: AuthProps) => {
                 autoFocus
               />
               <p className="mt-1 text-xs text-neutral-500">
-                Code expires in 60 seconds
+                Check your email inbox and spam folder
               </p>
             </div>
 
@@ -293,7 +288,7 @@ const Auth = ({ userType }: AuthProps) => {
                 className="flex-1"
                 disabled={isLoading}
               >
-                Change Number
+                Change Email
               </Button>
               <Button
                 type="button"

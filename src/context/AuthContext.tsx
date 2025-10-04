@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (phone: string, userType: UserType) => {
+  const signUp = async (email: string, userType: UserType) => {
     // Get registration data from sessionStorage if available
     const savedData = sessionStorage.getItem('registrationData');
     let userData: any = { userType };
@@ -138,16 +138,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userData = {
         userType,
         name: regData.name,
-        age: regData.age
+        age: regData.age,
+        phone: regData.phone
       };
     }
 
-    // Send OTP to phone number for sign up
+    const redirectUrl = `${window.location.origin}/`;
+
+    // Send OTP to email for sign up
     const { error } = await supabase.auth.signInWithOtp({
-      phone,
+      email,
       options: {
         shouldCreateUser: true,
-        data: userData
+        data: userData,
+        emailRedirectTo: redirectUrl
       }
     });
     
@@ -159,23 +163,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signIn = async (phone: string) => {
-    // Send OTP to phone number for sign in
+  const signIn = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    // Send OTP to email for sign in
     const { error } = await supabase.auth.signInWithOtp({
-      phone,
+      email,
       options: {
-        shouldCreateUser: false
+        shouldCreateUser: false,
+        emailRedirectTo: redirectUrl
       }
     });
     
     return { error };
   };
 
-  const verifyOtp = async (phone: string, token: string) => {
+  const verifyOtp = async (email: string, token: string) => {
     const { data, error } = await supabase.auth.verifyOtp({
-      phone,
+      email,
       token,
-      type: 'sms'
+      type: 'email'
     });
     
     return { data, error };

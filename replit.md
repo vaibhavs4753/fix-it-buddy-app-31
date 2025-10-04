@@ -13,13 +13,14 @@ EFIX is a React + Vite frontend application for a service marketplace that conne
 
 ## Current Setup Status
 - ✅ Dependencies installed (475 packages)
-- ✅ Vite configuration updated for Replit (host: 0.0.0.0, port: 5000)
+- ✅ Vite configuration updated for Replit (host: 0.0.0.0, port: 5000, allowedHosts: true)
 - ✅ Frontend workflow configured on port 5000 with webview output
 - ✅ Supabase client configuration verified with hardcoded credentials
 - ✅ Application tested and running without errors in development mode
 - ✅ Deployment configuration set up for autoscale deployment with build + serve
 - ✅ All Replit environment requirements satisfied
 - ✅ GitHub import completed successfully (October 4, 2025)
+- ✅ Proxy compatibility configured (allowedHosts: true for Replit iframe)
 
 ## Key Features
 - Dual user types: Clients and Technicians  
@@ -48,12 +49,18 @@ See `DATABASE_SETUP_INSTRUCTIONS.md` for detailed instructions.
 ## Recent Changes
 - **October 4, 2025**: Fresh GitHub clone setup for Replit environment
   - Installed all 475 npm dependencies successfully
-  - Fixed Vite configuration to use port 5000 (was previously 8080)
-  - Configured development workflow on port 5000 with proper host settings (0.0.0.0)
+  - Configured Vite for Replit compatibility:
+    - Set host to 0.0.0.0 on port 5000
+    - Added `allowedHosts: true` for Replit proxy/iframe compatibility
+    - Enabled strictPort to ensure port 5000 is used
+  - Configured development workflow on port 5000 with proper host settings
   - Validated Supabase integration with hardcoded credentials in client.ts
-  - Set up autoscale deployment with build step and serve
+  - Set up autoscale deployment configuration:
+    - Build command: `npm run build`
+    - Run command: `npx serve -s dist -l 5000`
   - Application running successfully with EFIX branding and dark theme
-  - Login page tested and displaying correctly
+  - Login page tested and displaying correctly (screenshot verified)
+  - GitHub import successfully completed and ready for use
 
 - **October 3, 2025**: Fixed authentication issues and improved database setup
   - **IMPORTANT**: Created `setup_database.sql` file to set up required database tables

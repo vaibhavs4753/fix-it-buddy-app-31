@@ -47,7 +47,25 @@ See `DATABASE_SETUP_INSTRUCTIONS.md` for detailed instructions.
 **Note**: The app will work in limited mode without database setup (using local user metadata), but features like profiles, technician management, and service requests require the database to be properly configured.
 
 ## Recent Changes
-- **October 4, 2025**: Fresh GitHub clone setup for Replit environment
+- **October 4, 2025 - PM**: Authentication & UI Enhancement Update
+  - **MAJOR**: Converted authentication from OTP to email/password with Supabase email verification
+  - Created unified AuthPage.tsx combining sign-in and sign-up on one page for both clients and technicians
+  - Updated Login.tsx to navigate to new authentication routes
+  - Removed legacy OTP authentication pages (Registration.tsx, Auth.tsx)
+  - **Dark Theme Consistency**: Applied consistent dark theme across all pages:
+    - Updated ServiceDetails.tsx (technician) to match dark theme
+    - Updated ClientRequests.tsx to dark theme with EFIX branding
+    - Updated ServiceRequestCard.tsx component for dark theme
+  - **History Pages**: Created complete service history functionality:
+    - Created TechnicianRequests.tsx page at /technician/requests for technician service history
+    - Updated ClientRequests.tsx to show active and completed service requests
+    - Both pages use dark theme and display active/completed services separately
+  - **Verified Existing Features**: Confirmed these features are working correctly:
+    - Service request accept/reject functionality in TechnicianHome.tsx
+    - Live tracking system with TechnicianLocationTracker and LiveTrackingMap components
+  - All changes architect-reviewed and approved with no blocking issues
+
+- **October 4, 2025 - AM**: Fresh GitHub clone setup for Replit environment
   - Installed all 475 npm dependencies successfully
   - Configured Vite for Replit compatibility:
     - Set host to 0.0.0.0 on port 5000

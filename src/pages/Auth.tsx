@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { UserType } from '@/types';
+import electricianBg from '@/assets/electrician-outline-bg.png';
+import plumberBg from '@/assets/plumber-outline-bg.png';
+import mechanicBg from '@/assets/mechanic-outline-bg.png';
 
 interface AuthProps {
   userType: UserType;
@@ -200,8 +203,27 @@ const Auth = ({ userType }: AuthProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-black">
-      <div className="max-w-md w-full space-y-8 p-8 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black relative overflow-hidden">
+      {/* Background outline images */}
+      <div className="absolute inset-0 pointer-events-none">
+        <img 
+          src={electricianBg} 
+          alt="" 
+          className="absolute top-10 -left-20 w-96 h-96 opacity-5 rotate-12"
+        />
+        <img 
+          src={plumberBg} 
+          alt="" 
+          className="absolute bottom-10 -right-20 w-96 h-96 opacity-5 -rotate-12"
+        />
+        <img 
+          src={mechanicBg} 
+          alt="" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-[0.03]"
+        />
+      </div>
+      
+      <div className="max-w-md w-full space-y-8 p-8 bg-neutral-900 rounded-xl shadow-2xl border border-neutral-800 relative z-10">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-primary mb-2">EFIX</h1>
           <h2 className="text-xl font-medium text-white">

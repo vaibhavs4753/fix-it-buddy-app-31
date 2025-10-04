@@ -73,20 +73,26 @@ const ServiceDetails = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-neutral-900">
+      {/* Header */}
+      <header className="bg-black shadow-lg border-b border-neutral-800">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate('/technician/home')}
+              className="text-neutral-300 hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-xl font-bold text-primary">Service Details</h1>
+          </div>
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="max-w-3xl mx-auto">
-          <button 
-            onClick={() => navigate('/technician/home')}
-            className="flex items-center text-black hover:underline mb-4"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to dashboard
-          </button>
-          
-          <h1 className="text-2xl font-bold mb-6">Service Details</h1>
           
           {/* Map View */}
           <div className="mb-6">
@@ -98,50 +104,50 @@ const ServiceDetails = () => {
           </div>
           
           {/* Service Information */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
-              <div className="p-2 rounded-full bg-white mr-3">
+              <div className="p-3 rounded-full bg-primary/10 mr-3">
                 <ServiceIcon type={currentRequest.serviceType} size={24} />
               </div>
               <div>
-                <h2 className="font-semibold text-lg capitalize">{currentRequest.serviceType} Service</h2>
-                <p className="text-sm text-black">{formatDate(new Date(currentRequest.createdAt))}</p>
+                <h2 className="font-semibold text-lg text-white capitalize">{currentRequest.serviceType} Service</h2>
+                <p className="text-sm text-neutral-400">{formatDate(new Date(currentRequest.createdAt))}</p>
               </div>
             </div>
             
-            <div className="border-t border-black py-4">
-              <h3 className="font-medium mb-2">Service Location</h3>
-              <p className="text-black">{currentRequest.location.address}</p>
+            <div className="border-t border-neutral-700 py-4">
+              <h3 className="font-medium mb-2 text-white">Service Location</h3>
+              <p className="text-neutral-300">{currentRequest.location.address}</p>
             </div>
             
-            <div className="border-t border-black py-4">
-              <h3 className="font-medium mb-2">Description</h3>
-              <p className="text-black">{currentRequest.description}</p>
+            <div className="border-t border-neutral-700 py-4">
+              <h3 className="font-medium mb-2 text-white">Description</h3>
+              <p className="text-neutral-300">{currentRequest.description}</p>
             </div>
             
             {currentRequest.mediaUrls.length > 0 && (
-              <div className="border-t border-black py-4">
-                <h3 className="font-medium mb-2">Media</h3>
+              <div className="border-t border-neutral-700 py-4">
+                <h3 className="font-medium mb-2 text-white">Media</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentRequest.mediaUrls.map((url, index) => (
                     <div key={index} className="relative">
                       {currentRequest.mediaType === 'image' && (
-                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-neutral-700 rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
                       )}
                       {currentRequest.mediaType === 'video' && (
-                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-neutral-700 rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </div>
                       )}
                       {currentRequest.mediaType === 'audio' && (
-                        <div className="w-20 h-20 bg-white rounded flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-20 h-20 bg-neutral-700 rounded flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                           </svg>
                         </div>
@@ -152,9 +158,9 @@ const ServiceDetails = () => {
               </div>
             )}
             
-            <div className="border-t border-black py-4">
-              <h3 className="font-medium mb-2">Visit Required</h3>
-              <p className="text-black">{currentRequest.isVisitRequired ? 'Yes' : 'No'}</p>
+            <div className="border-t border-neutral-700 py-4">
+              <h3 className="font-medium mb-2 text-white">Visit Required</h3>
+              <p className="text-neutral-300">{currentRequest.isVisitRequired ? 'Yes' : 'No'}</p>
             </div>
           </div>
           
@@ -169,7 +175,7 @@ const ServiceDetails = () => {
                   description: "Would dial client's number in a real app",
                 });
               }}
-              className="flex items-center justify-center"
+              className="flex items-center justify-center bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -178,15 +184,15 @@ const ServiceDetails = () => {
             </Button>
             
             {showCompleteForm ? (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-medium mb-4">Complete Service</h3>
-                <p className="text-sm text-black mb-4">
+              <div className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-medium mb-4 text-white">Complete Service</h3>
+                <p className="text-sm text-neutral-300 mb-4">
                   Ask the client for their personal ID to complete the service
                 </p>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="personalId" className="text-sm font-medium">
+                    <Label htmlFor="personalId" className="text-sm font-medium text-white">
                       Client's Personal ID
                     </Label>
                     <Input
@@ -195,7 +201,7 @@ const ServiceDetails = () => {
                       placeholder="Enter client's personal ID"
                       value={personalId}
                       onChange={(e) => setPersonalId(e.target.value)}
-                      className="mt-1"
+                      className="mt-1 bg-neutral-700 border-neutral-600 text-white"
                       required
                     />
                   </div>
@@ -204,7 +210,7 @@ const ServiceDetails = () => {
                     <Button
                       onClick={handleComplete}
                       disabled={isLoading}
-                      className="flex-1"
+                      className="flex-1 bg-primary text-black hover:bg-primary/90"
                     >
                       {isLoading ? "Processing..." : "Complete Service"}
                     </Button>
@@ -212,7 +218,7 @@ const ServiceDetails = () => {
                     <Button
                       variant="outline"
                       onClick={() => setShowCompleteForm(false)}
-                      className="flex-1"
+                      className="flex-1 border-neutral-700 text-white hover:bg-neutral-700"
                       disabled={isLoading}
                     >
                       Cancel

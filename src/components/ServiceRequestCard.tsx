@@ -29,23 +29,23 @@ const ServiceRequestCard = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+    <div className="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-4 mb-4">
       <div className="flex items-center mb-3">
-        <div className="p-2 rounded-full bg-white mr-3">
+        <div className="p-2 rounded-full bg-primary/10 mr-3">
           <ServiceIcon type={request.serviceType} size={24} />
         </div>
         <div>
-          <h3 className="font-semibold text-lg capitalize">{request.serviceType} Service</h3>
-          <div className="flex items-center text-sm text-black">
+          <h3 className="font-semibold text-lg text-white capitalize">{request.serviceType} Service</h3>
+          <div className="flex items-center text-sm text-neutral-400">
             <CalendarClock size={14} className="mr-1" />
             {formatDate(new Date(request.createdAt))}
           </div>
         </div>
       </div>
       
-      <p className="text-black mb-3 line-clamp-2">{request.description}</p>
+      <p className="text-neutral-300 mb-3 line-clamp-2">{request.description}</p>
       
-      <div className="text-sm text-black mb-3">
+      <div className="text-sm text-neutral-300 mb-3">
         <p className="truncate">
           Location: {request.location.address || 'Unknown location'}
         </p>

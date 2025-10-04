@@ -8,9 +8,8 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  signUp: (phone: string, userType: UserType) => Promise<{ error: any }>;
-  signIn: (phone: string) => Promise<{ error: any }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ data: any, error: any }>;
+  signUp: (email: string, password: string, name: string, age: number, userType: UserType) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updateUserProfile: (userData: Partial<User>) => Promise<void>;
@@ -128,64 +127,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, userType: UserType) => {
-    // Get registration data from sessionStorage if available
-    const savedData = sessionStorage.getItem('registrationData');
-    let userData: any = { userType };
-    
-    if (savedData) {
-      const regData = JSON.parse(savedData);
-      userData = {
-        userType,
-        name: regData.name,
-        age: regData.age,
-        phone: regData.phone
-      };
-    }
+  const signUp = async (email: string, password: string, name: string, age: number, userType: UserType) => {
+    const userData = {
+      userType,
+      name,
+      age
+    };
 
     const redirectUrl = `${window.location.origin}/`;
 
-    // Send OTP to email for sign up
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signUp({
       email,
+      password,
       options: {
-        shouldCreateUser: true,
         data: userData,
         emailRedirectTo: redirectUrl
       }
     });
     
-    // Clear registration data after signup attempt
-    if (savedData) {
-      sessionStorage.removeItem('registrationData');
-    }
-    
     return { error };
   };
 
-  const signIn = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    // Send OTP to email for sign in
-    const { error } = await supabase.auth.signInWithOtp({
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: redirectUrl
-      }
+      password
     });
     
     return { error };
-  };
-
-  const verifyOtp = async (email: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email'
-    });
-    
-    return { data, error };
   };
 
   const signOut = async () => {
@@ -272,7 +241,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         signUp,
         signIn,
-        verifyOtp,
         signOut,
         resetPassword,
         updateUserProfile,

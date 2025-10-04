@@ -9,8 +9,7 @@ import { ServiceProvider } from "./context/ServiceContext";
 
 // Pages
 import Login from "./pages/Login";
-import Registration from "./pages/Registration";
-import Auth from "./pages/Auth";
+import AuthPage from "./pages/AuthPage";
 import ClientProfileSetup from "./pages/client/ClientProfileSetup";
 import ClientHome from "./pages/client/ClientHome";
 import ClientServices from "./pages/client/ClientServices";
@@ -23,6 +22,7 @@ import ServiceSelection from "./pages/technician/ServiceSelection";
 import TechnicianProfileSetup from "./pages/technician/TechnicianProfileSetup";
 import TechnicianHome from "./pages/technician/TechnicianHome";
 import TechnicianTracking from "./pages/technician/TechnicianTracking";
+import TechnicianRequests from "./pages/technician/TechnicianRequests";
 import ServiceDetails from "./pages/technician/ServiceDetails";
 import NotFound from "./pages/NotFound";
 
@@ -42,10 +42,8 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
-              <Route path="/register/client" element={<Registration userType="client" />} />
-              <Route path="/register/technician" element={<Registration userType="technician" />} />
-              <Route path="/auth/client" element={<Auth userType="client" />} />
-              <Route path="/auth/technician" element={<Auth userType="technician" />} />
+              <Route path="/auth/client" element={<AuthPage userType="client" />} />
+              <Route path="/auth/technician" element={<AuthPage userType="technician" />} />
               
               {/* Client Routes */}
               <Route path="/client/profile-setup" element={
@@ -103,6 +101,11 @@ const App = () => (
               <Route path="/technician/tracking" element={
                 <ProtectedRoute userType="technician">
                   <TechnicianTracking />
+                </ProtectedRoute>
+              } />
+              <Route path="/technician/requests" element={
+                <ProtectedRoute userType="technician">
+                  <TechnicianRequests />
                 </ProtectedRoute>
               } />
               <Route path="/technician/service-details" element={

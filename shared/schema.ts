@@ -63,6 +63,7 @@ export const technicianProfiles = pgTable('technician_profiles', {
 }));
 
 // Services table
+// Note: Using categoryEnum with 'service_fee' to support all inserted values from migrations
 export const services = pgTable('services', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),

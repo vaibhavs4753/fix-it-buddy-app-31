@@ -111,12 +111,23 @@ const AuthPage = ({ userType }: AuthPageProps) => {
         const { error } = await signUp(email, password, formData.name.trim(), ageNum, userType);
 
         if (error) {
-          if (error.message.includes('already registered')) {
+          if (error.message.includes('already') || error.message.includes('exists')) {
             toast({
-              title: "Account exists",
-              description: "This email is already registered. Please sign in instead.",
+              title: "Account already exists",
+              description: "This email is already registered. Try logging in or click forget password if you've forgotten it.",
               variant: "destructive",
             });
+            // Switch to sign-in mode after showing the message
+            setTimeout(() => {
+              setIsSignUp(false);
+              setFormData({
+                ...formData,
+                password: '',
+                confirmPassword: '',
+                name: '',
+                age: '',
+              });
+            }, 2000);
           } else {
             toast({
               title: "Sign up failed",
@@ -126,9 +137,20 @@ const AuthPage = ({ userType }: AuthPageProps) => {
           }
         } else {
           toast({
-            title: "Check your email",
-            description: "We sent you a verification link. Please check your email to complete registration.",
+            title: "Account created successfully!",
+            description: "Redirecting you to the login page...",
           });
+          // Redirect to login page after successful registration
+          setTimeout(() => {
+            setIsSignUp(false);
+            setFormData({
+              email: formData.email,
+              password: '',
+              confirmPassword: '',
+              name: '',
+              age: '',
+            });
+          }, 1500);
         }
       } catch (error) {
         toast({

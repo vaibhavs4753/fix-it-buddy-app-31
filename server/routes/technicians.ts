@@ -11,13 +11,16 @@ router.get('/', async (req, res) => {
   try {
     const { serviceType } = req.query;
     
-    let query = db.select().from(technicianProfiles);
+    let technicians;
     
-    if (serviceType) {
-      query = query.where(eq(technicianProfiles.serviceType, serviceType as string));
+    if (serviceType && (serviceType === 'electrician' || serviceType === 'mechanic' || serviceType === 'plumber')) {
+      technicians = await db.select()
+        .from(technicianProfiles)
+        .where(eq(technicianProfiles.serviceType, serviceType));
+    } else {
+      technicians = await db.select().from(technicianProfiles);
     }
     
-    const technicians = await query;
     res.json(technicians);
   } catch (error) {
     console.error('Get technicians error:', error);

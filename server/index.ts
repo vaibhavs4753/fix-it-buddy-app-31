@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import serviceRoutes from './routes/services';
 import technicianRoutes from './routes/technicians';
 import locationRoutes from './routes/location';
+import configRoutes from './routes/config';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/technicians', technicianRoutes);
 app.use('/api/location', locationRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

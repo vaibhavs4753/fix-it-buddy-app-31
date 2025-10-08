@@ -1,11 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { User, UserType, ServiceType } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: { user: User } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   signUp: (email: string, password: string, name: string, age: number, userType: UserType) => Promise<{ error: any }>;
@@ -23,170 +21,203 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const API_BASE = 'http://localhost:3000/api';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<{ user: User } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedUserType, setSelectedUserType] = useState<UserType | null>(null);
   const [availableRoles, setAvailableRoles] = useState<UserType[]>([]);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
   
+  // Map database roles to app UserType
+  const mapRoleToUserType = (role: string): UserType => {
+    return role === 'customer' ? 'client' : role as UserType;
+  };
+
+  // Fetch current user on mount
   useEffect(() => {
-    let isMounted = true;
-    
-    // Map database roles to app UserType
-    const mapRoleToUserType = (role: string): UserType => {
-      return role === 'customer' ? 'client' : role as UserType;
-    };
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted) return;
-        
-        setSession(session);
-        if (session?.user) {
-          try {
-            // Fetch user profile from profiles table
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            if (profile && !profileError) {
-              // Get technician service type if user is a technician
-              let serviceType: ServiceType | undefined = undefined;
-              if (profile.active_role === 'technician') {
-                const { data: techProfile } = await supabase
-                  .from('technician_profiles')
-                  .select('service_type')
-                  .eq('user_id', session.user.id)
-                  .maybeSingle();
-                serviceType = techProfile?.service_type as ServiceType;
-              }
+    const fetchUser = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
 
-              const appUser: User = {
-                id: session.user.id,
-                name: profile.name || session.user.email || '',
-                phone: profile.phone || '',
-                type: mapRoleToUserType(profile.active_role || profile.role),
-                serviceType,
-              };
-              setUser(appUser);
-              setAvailableRoles((profile.available_roles || ['customer']).map(mapRoleToUserType));
-            } else {
-              // Fallback to metadata if profile doesn't exist or there's an error
-              console.warn('Profile not found or error occurred, using fallback from user_metadata', profileError);
-              const userType = session.user.user_metadata?.userType as UserType || 'client';
-              const appUser: User = {
-                id: session.user.id,
-                name: session.user.user_metadata?.name || session.user.email || '',
-                phone: session.user.phone || '',
-                type: userType,
-                serviceType: session.user.user_metadata?.serviceType as ServiceType,
-              };
-              setUser(appUser);
-              setAvailableRoles([userType]);
+      try {
+        const response = await fetch(`${API_BASE}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          
+          // Get technician service type if user is a technician
+          let serviceType: ServiceType | undefined = undefined;
+          if (userData.role === 'technician') {
+            const techResponse = await fetch(`${API_BASE}/technicians/profile/my`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            if (techResponse.ok) {
+              const techData = await techResponse.json();
+              serviceType = techData?.serviceType as ServiceType;
             }
-          } catch (error) {
-            console.error('Error fetching profile (database may not be set up):', error);
-            // Fallback to metadata - this ensures auth works even without database tables
-            const userType = session.user.user_metadata?.userType as UserType || 'client';
-            const appUser: User = {
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email || '',
-              phone: session.user.phone || '',
-              type: userType,
-              serviceType: session.user.user_metadata?.serviceType as ServiceType,
-            };
-            setUser(appUser);
-            setAvailableRoles([userType]);
           }
+
+          const appUser: User = {
+            id: userData.id,
+            name: userData.name || userData.email,
+            phone: userData.phone || '',
+            type: mapRoleToUserType(userData.role),
+            serviceType,
+          };
+          
+          setUser(appUser);
+          setSession({ user: appUser });
+          setAvailableRoles((userData.availableRoles || ['customer']).map(mapRoleToUserType));
         } else {
+          // Token invalid, clear it
+          localStorage.removeItem('auth_token');
+          setToken(null);
           setUser(null);
-          setAvailableRoles([]);
+          setSession(null);
         }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        localStorage.removeItem('auth_token');
+        setToken(null);
+        setUser(null);
+        setSession(null);
+      } finally {
         setIsLoading(false);
       }
-    );
-
-    // Get initial session once
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted && !session) {
-        setIsLoading(false);
-      }
-    }).catch(() => {
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
     };
-  }, []);
+
+    fetchUser();
+  }, [token]);
 
   const signUp = async (email: string, password: string, name: string, age: number, userType: UserType) => {
-    const userData = {
-      userType,
-      name,
-      age
-    };
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          age,
+          userType,
+        }),
+      });
 
-    const redirectUrl = `${window.location.origin}/`;
+      const data = await response.json();
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData,
-        emailRedirectTo: redirectUrl
+      if (!response.ok) {
+        return { error: { message: data.error || 'Registration failed' } };
       }
-    });
-    
-    return { error };
+
+      // Store token
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        setToken(data.token);
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Network error. Please try again.' } };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    return { error };
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: { message: data.error || 'Login failed' } };
+      }
+
+      // Store token
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        setToken(data.token);
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Network error. Please try again.' } };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('auth_token');
+    setToken(null);
     setUser(null);
     setSession(null);
     setAvailableRoles([]);
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
-    });
-    
-    return { error };
+    try {
+      const response = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: { message: data.error || 'Failed to send reset email' } };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Network error. Please try again.' } };
+    }
   };
 
   const updateUserProfile = async (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      
-      // Update profile in database
-      await supabase
-        .from('profiles')
-        .update({
-          name: updatedUser.name,
-          phone: updatedUser.phone,
-        })
-        .eq('id', user.id);
+    if (!user || !token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          phone: userData.phone,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedUser = { ...user, ...userData };
+        setUser(updatedUser);
+        setSession({ user: updatedUser });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
@@ -201,15 +232,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const switchRole = async (newRole: UserType) => {
-    if (!user || !availableRoles.includes(newRole)) return;
+    if (!user || !availableRoles.includes(newRole) || !token) return;
     
     try {
-      const { error } = await (supabase as any).rpc('switch_user_role', {
-        new_role: newRole
+      const response = await fetch(`${API_BASE}/auth/switch-role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newRole }),
       });
       
-      if (!error) {
+      if (response.ok) {
         setUser({ ...user, type: newRole });
+        if (session) {
+          setSession({ user: { ...user, type: newRole } });
+        }
       }
     } catch (error) {
       console.error('Error switching role:', error);
@@ -217,14 +256,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addRole = async (newRole: UserType) => {
-    if (!user || availableRoles.includes(newRole)) return;
+    if (!user || availableRoles.includes(newRole) || !token) return;
     
     try {
-      const { error } = await (supabase as any).rpc('add_user_role', {
-        new_role: newRole
+      const response = await fetch(`${API_BASE}/auth/add-role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newRole }),
       });
       
-      if (!error) {
+      if (response.ok) {
         setAvailableRoles([...availableRoles, newRole]);
       }
     } catch (error) {
@@ -237,7 +281,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         session,
-        isAuthenticated: !!session?.user,
+        isAuthenticated: !!user,
         isLoading,
         signUp,
         signIn,

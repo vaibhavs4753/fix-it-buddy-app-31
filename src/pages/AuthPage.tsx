@@ -11,7 +11,7 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ userType }: AuthPageProps) => {
-  const { signUp, signIn, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { signUp, signIn, resetPassword, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -303,6 +303,41 @@ const AuthPage = ({ userType }: AuthPageProps) => {
           >
             {isLoading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
           </Button>
+
+          {!isSignUp && (
+            <div className="text-center mt-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!formData.email) {
+                    toast({
+                      title: "Email required",
+                      description: "Please enter your email address first",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  const { error } = await resetPassword(formData.email);
+                  if (error) {
+                    toast({
+                      title: "Error",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  } else {
+                    toast({
+                      title: "Check your email",
+                      description: "If an account exists, a password reset link has been sent.",
+                    });
+                  }
+                }}
+                className="text-sm text-neutral-400 hover:text-primary"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
         </form>
 
         <div className="text-center">

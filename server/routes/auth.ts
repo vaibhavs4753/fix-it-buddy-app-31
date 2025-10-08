@@ -159,4 +159,116 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// Reset password (placeholder - in real app would send email)
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if user exists
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    
+    // Always return success to prevent email enumeration
+    res.json({ 
+      message: 'If an account with this email exists, a password reset link has been sent.',
+      success: true 
+    });
+
+    // In a real app, you would:
+    // 1. Generate a reset token
+    // 2. Store it in database with expiry
+    // 3. Send email with reset link
+    if (user) {
+      console.log(`Password reset requested for: ${email}`);
+      // TODO: Implement email sending logic
+    }
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+// Update profile
+router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { name, phone } = req.body;
+    const userId = req.userId;
+
+    const updates: any = {};
+    if (name) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+
+    const [updated] = await db.update(profiles)
+      .set(updates)
+      .where(eq(profiles.id, userId!))
+      .returning();
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Switch role
+router.post('/switch-role', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { newRole } = req.body;
+    const userId = req.userId;
+
+    const [profile] = await db.select().from(profiles).where(eq(profiles.id, userId!)).limit(1);
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Check if role is available
+    if (!profile.availableRoles?.includes(newRole)) {
+      return res.status(403).json({ error: 'Role not available' });
+    }
+
+    await db.update(profiles)
+      .set({ activeRole: newRole })
+      .where(eq(profiles.id, userId!));
+
+    res.json({ success: true, role: newRole });
+  } catch (error) {
+    console.error('Switch role error:', error);
+    res.status(500).json({ error: 'Failed to switch role' });
+  }
+});
+
+// Add role
+router.post('/add-role', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { newRole } = req.body;
+    const userId = req.userId;
+
+    const [profile] = await db.select().from(profiles).where(eq(profiles.id, userId!)).limit(1);
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Check if role already exists
+    if (profile.availableRoles?.includes(newRole)) {
+      return res.json({ success: true, message: 'Role already added' });
+    }
+
+    const updatedRoles = [...(profile.availableRoles || []), newRole];
+
+    await db.update(profiles)
+      .set({ availableRoles: updatedRoles })
+      .where(eq(profiles.id, userId!));
+
+    res.json({ success: true, roles: updatedRoles });
+  } catch (error) {
+    console.error('Add role error:', error);
+    res.status(500).json({ error: 'Failed to add role' });
+  }
+});
+
 export default router;

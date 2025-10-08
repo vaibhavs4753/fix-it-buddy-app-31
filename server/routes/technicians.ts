@@ -47,6 +47,25 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get current user's technician profile
+router.get('/profile/my', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const [profile] = await db.select()
+      .from(technicianProfiles)
+      .where(eq(technicianProfiles.userId, req.userId!))
+      .limit(1);
+    
+    if (!profile) {
+      return res.status(404).json({ error: 'Technician profile not found' });
+    }
+
+    res.json(profile);
+  } catch (error) {
+    console.error('Get technician profile error:', error);
+    res.status(500).json({ error: 'Failed to get technician profile' });
+  }
+});
+
 // Create/Update technician profile
 router.post('/profile', authenticate, async (req: AuthRequest, res) => {
   try {
